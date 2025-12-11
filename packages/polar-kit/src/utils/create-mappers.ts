@@ -1,10 +1,9 @@
+import type { Prices } from '@polar-sh/sdk/models/components/productcreate';
 import type {
   Config,
   PolarMappers,
   PolarPrice,
   PolarPriceContext,
-  PolarPriceCreateInput,
-  PolarProductCreateInput,
   SubscriptionPlan,
 } from '@/definitions';
 
@@ -12,9 +11,7 @@ export function createMappers(config: Config): PolarMappers {
   const metadataConfig = config.metadata;
 
   return {
-    mapSubscriptionPlanToPolarProduct: (
-      plan: SubscriptionPlan
-    ): PolarProductCreateInput => {
+    mapSubscriptionPlanToPolarProduct: (plan: SubscriptionPlan) => {
       return {
         name: plan.product.name,
         description: plan.product.description,
@@ -30,34 +27,25 @@ export function createMappers(config: Config): PolarMappers {
     mapSubscriptionPlanToPolarPrice: (
       price: PolarPrice,
       _context: PolarPriceContext
-    ): PolarPriceCreateInput => {
-      // Handle different price types
+    ): Prices => {
+      // Handle free prices
       if (price.amountType === 'free') {
-        if (price.type === 'recurring') {
-          return {
-            type: 'recurring',
-            amountType: 'free',
-            recurringInterval: price.recurringInterval || 'month',
-          };
-        }
+        return { amountType: 'free' };
+      }
+
+      // Handle custom (pay-what-you-want) prices
+      if (price.amountType === 'custom') {
         return {
-          type: 'one_time',
-          amountType: 'free',
+          amountType: 'custom',
+          priceCurrency: price.priceCurrency || 'usd',
+          minimumAmount: price.minimumAmount,
+          maximumAmount: price.maximumAmount,
+          presetAmount: price.presetAmount,
         };
       }
 
-      // Fixed price
-      if (price.type === 'recurring') {
-        return {
-          type: 'recurring',
-          amountType: 'fixed',
-          recurringInterval: price.recurringInterval || 'month',
-          priceAmount: price.priceAmount || 0,
-          priceCurrency: price.priceCurrency || 'usd',
-        };
-      }
+      // Handle fixed prices
       return {
-        type: 'one_time',
         amountType: 'fixed',
         priceAmount: price.priceAmount || 0,
         priceCurrency: price.priceCurrency || 'usd',

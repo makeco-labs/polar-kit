@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-import type { PolarPriceCreateInput } from './polar-product.schemas';
-
 // ========================================================================
 // POLAR PRICE SCHEMAS
 // ========================================================================
@@ -53,20 +51,3 @@ export const polarPriceSchema = z.object({
 });
 
 export type PolarPrice = z.infer<typeof polarPriceSchema>;
-
-// ========================================================================
-// MAPPER TYPES
-// ========================================================================
-
-export interface PolarPriceMapperContext {
-  polarProductId: string;
-  internalProductId: string;
-  internalPriceId: string;
-  planName: string;
-  tier: string;
-}
-
-export type PolarPriceMapper = (
-  price: PolarPrice,
-  context: PolarPriceMapperContext
-) => PolarPriceCreateInput;

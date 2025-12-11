@@ -1,14 +1,13 @@
+import type {
+  Prices,
+  ProductCreate,
+} from '@polar-sh/sdk/models/components/productcreate';
 import { z } from 'zod';
-
 import type { DatabaseAdapter } from './database-adapter.schemas';
 import { databaseAdapterSchema } from './database-adapter.schemas';
 import type { PolarPrice } from './polar-price.schemas';
 import { polarPriceSchema } from './polar-price.schemas';
-import {
-  type PolarPriceCreateInput,
-  type PolarProductCreateInput,
-  polarProductSchema,
-} from './polar-product.schemas';
+import { polarProductSchema } from './polar-product.schemas';
 import type { Prettify } from './utility.types';
 
 // ========================================================================
@@ -37,13 +36,16 @@ export interface PolarPriceContext {
 }
 
 export interface PolarMappers {
-  mapSubscriptionPlanToPolarProduct: (
-    plan: SubscriptionPlan
-  ) => PolarProductCreateInput;
+  mapSubscriptionPlanToPolarProduct: (plan: SubscriptionPlan) => Omit<
+    ProductCreate,
+    'prices' | 'recurringInterval'
+  > & {
+    recurringInterval?: 'month' | 'year';
+  };
   mapSubscriptionPlanToPolarPrice: (
     price: PolarPrice,
     context: PolarPriceContext
-  ) => PolarPriceCreateInput;
+  ) => Prices;
 }
 
 // ========================================================================
