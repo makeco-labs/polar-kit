@@ -1,9 +1,14 @@
 import chalk from 'chalk';
+import { Command } from 'commander';
 import prompts from 'prompts';
 
 // ========================================================================
-// POLAR URL DEFINITIONS
+// TYPES
 // ========================================================================
+
+interface UrlsOptions {
+  all?: boolean;
+}
 
 interface PolarUrl {
   name: string;
@@ -11,6 +16,10 @@ interface PolarUrl {
   live: string;
   sandbox: string;
 }
+
+// ========================================================================
+// URL DEFINITIONS
+// ========================================================================
 
 const POLAR_URLS: PolarUrl[] = [
   {
@@ -46,10 +55,8 @@ const POLAR_URLS: PolarUrl[] = [
 ];
 
 // ========================================================================
-// URL ACTIONS
+// ACTION
 // ========================================================================
-
-// ------------------ Show All URLs ------------------
 
 function showAllUrls(): void {
   console.log(chalk.blue.bold('\n🔗 Polar Dashboard URLs:\n'));
@@ -61,8 +68,6 @@ function showAllUrls(): void {
     console.log();
   }
 }
-
-// ------------------ Show URL Selection ------------------
 
 async function showUrlSelection(): Promise<void> {
   try {
@@ -90,9 +95,7 @@ async function showUrlSelection(): Promise<void> {
   }
 }
 
-// ------------------ Main Action ------------------
-
-export async function showPolarUrlsAction(options: {
+async function showPolarUrlsAction(options: {
   showAll: boolean;
 }): Promise<void> {
   const { showAll } = options;
@@ -103,3 +106,22 @@ export async function showPolarUrlsAction(options: {
     await showUrlSelection();
   }
 }
+
+// ========================================================================
+// COMMAND
+// ========================================================================
+
+export const urls = new Command()
+  .name('urls')
+  .description('Show Polar dashboard URLs')
+  .option('-a, --all', 'Show all URLs with labels')
+  .action(async (options: UrlsOptions) => {
+    try {
+      await showPolarUrlsAction({
+        showAll: !!options.all,
+      });
+    } catch (error) {
+      console.error(chalk.red(`\nOperation failed: ${error}`));
+      process.exit(1);
+    }
+  });

@@ -3,6 +3,10 @@ import { Command } from 'commander';
 
 import { loadUserPreferences } from '@/utils';
 
+// ========================================================================
+// COMMAND
+// ========================================================================
+
 export const config = new Command()
   .name('config')
   .description('View current user preferences')
