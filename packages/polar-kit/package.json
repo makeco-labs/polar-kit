@@ -50,7 +50,7 @@
     "build": "bun clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json --resolve-full-paths && chmod +x dist/cli.js",
     "dev": "tsc -p tsconfig.build.json --watch",
     "dev:typecheck": "bun typecheck --watch --preserveWatchOutput",
-    "lint": "bunx ultracite@latest lint",
+    "lint": "bunx ultracite@latest check",
     "fix": "bunx ultracite@latest fix",
     "test": "vitest",
     "ci": "bun fix && bun lint && bun typecheck && bun run build",
