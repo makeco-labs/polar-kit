@@ -17,7 +17,7 @@
 		"test": "turbo run test",
 		"ci": "turbo run ci",
 		"git": "bun run ci && git add . && git commit -m",
-		"postgit": "git push --all"
+		"postgit": "git pull --rebase origin main && git push --all"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.2",
