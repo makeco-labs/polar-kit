@@ -1,4 +1,6 @@
 import { defineConfig } from '@makeco/polar-kit';
+
+import type { ProductCreate } from '@makeco/polar-kit';
 import { postgresAdapter } from './src/database-adapter';
 
 export const polarAccessToken = process.env.POLAR_ACCESS_TOKEN;
@@ -16,76 +18,70 @@ export default defineConfig({
   // Complete subscription plan setup demonstrating all features
   plans: [
     {
-      product: {
-        id: 'free',
-        name: 'Free Plan',
-        description: 'Perfect for getting started',
-      },
-      prices: [
-        {
-          id: 'free-monthly',
-          type: 'recurring',
-          amountType: 'free',
-          recurringInterval: 'month',
-        },
-      ],
+      name: 'Free Plan',
+      description: 'Perfect for getting started',
+      recurringInterval: 'month',
+      prices: [{ amountType: 'free' }],
+      metadata: { internal_product_id: 'free' },
     },
     {
-      product: {
-        id: 'pro',
-        name: 'Pro Plan',
-        description: 'For growing businesses',
-      },
+      name: 'Pro Plan (Monthly)',
+      description: 'For growing businesses',
+      recurringInterval: 'month',
       prices: [
         {
-          id: 'pro-monthly',
-          type: 'recurring',
           amountType: 'fixed',
           priceAmount: 2999, // $29.99
           priceCurrency: 'usd',
-          recurringInterval: 'month',
         },
+      ],
+      metadata: { internal_product_id: 'pro-monthly' },
+    },
+    {
+      name: 'Pro Plan (Annual)',
+      description: 'For growing businesses - save with annual billing',
+      recurringInterval: 'year',
+      prices: [
         {
-          id: 'pro-yearly',
-          type: 'recurring',
           amountType: 'fixed',
           priceAmount: 29999, // $299.99 (save ~17%)
           priceCurrency: 'usd',
-          recurringInterval: 'year',
         },
       ],
+      metadata: { internal_product_id: 'pro-yearly' },
     },
     {
-      product: {
-        id: 'enterprise',
-        name: 'Enterprise Plan',
-        description: 'For large organizations',
-      },
+      name: 'Enterprise Plan (Monthly)',
+      description: 'For large organizations',
+      recurringInterval: 'month',
       prices: [
         {
-          id: 'enterprise-monthly',
-          type: 'recurring',
           amountType: 'fixed',
           priceAmount: 9999, // $99.99
           priceCurrency: 'usd',
-          recurringInterval: 'month',
         },
+      ],
+      metadata: { internal_product_id: 'enterprise-monthly' },
+    },
+    {
+      name: 'Enterprise Plan (Annual)',
+      description: 'For large organizations - save with annual billing',
+      recurringInterval: 'year',
+      prices: [
         {
-          id: 'enterprise-yearly',
-          type: 'recurring',
           amountType: 'fixed',
           priceAmount: 99999, // $999.99 (save ~17%)
           priceCurrency: 'usd',
-          recurringInterval: 'year',
         },
       ],
+      metadata: { internal_product_id: 'enterprise-yearly' },
     },
-  ],
+  ] satisfies ProductCreate[],
 
   // Environment variables
   env: {
     polarAccessToken,
-    polarOrganizationId,
+    organizationId: polarOrganizationId,
   },
 
   // Database adapters using Drizzle ORM
@@ -96,8 +92,10 @@ export default defineConfig({
   // Map internal plan IDs to product identifiers (optional)
   productIds: {
     free: 'free',
-    pro: 'pro',
-    enterprise: 'enterprise',
+    'pro-monthly': 'pro-monthly',
+    'pro-yearly': 'pro-yearly',
+    'enterprise-monthly': 'enterprise-monthly',
+    'enterprise-yearly': 'enterprise-yearly',
   },
 
   // Metadata configuration (uses defaults)

@@ -1,12 +1,14 @@
 import { existsSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { Product } from '@polar-sh/sdk/models/components/product';
+import type { ProductPrice } from '@polar-sh/sdk/models/components/productprice';
 import Database from 'better-sqlite3';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-import type { DatabaseAdapter, PolarPrice, PolarProduct } from '@/definitions';
+import type { DatabaseAdapter } from '@/definitions';
 
 // Products table - mirrors the Polar product structure
 export const products = sqliteTable('products', {
@@ -39,10 +41,10 @@ export const prices = sqliteTable('prices', {
   updatedAt: text('updated_at').default('CURRENT_TIMESTAMP'),
 });
 
-export type Product = typeof products.$inferSelect;
-export type NewProduct = typeof products.$inferInsert;
-export type Price = typeof prices.$inferSelect;
-export type NewPrice = typeof prices.$inferInsert;
+export type ProductRecord = typeof products.$inferSelect;
+export type NewProductRecord = typeof products.$inferInsert;
+export type PriceRecord = typeof prices.$inferSelect;
+export type NewPriceRecord = typeof prices.$inferInsert;
 
 /**
  * Creates a test SQLite database with schema
@@ -125,7 +127,7 @@ export function cleanupTestDatabase(
 /**
  * Converts Polar product data to database format
  */
-function buildProductData(polarProduct: PolarProduct, internalId: string) {
+function buildProductData(polarProduct: Product, internalId: string) {
   return {
     id: internalId,
     polarId: polarProduct.id,
@@ -146,21 +148,23 @@ function buildProductData(polarProduct: PolarProduct, internalId: string) {
  * Converts Polar price data to database format
  */
 function buildPriceData(
-  polarPrice: PolarPrice,
+  polarPrice: ProductPrice,
   internalId: string,
-  internalProductId: string
+  internalProductId: string,
+  polarProductId: string
 ) {
+  const priceAny = polarPrice as Record<string, unknown>;
   return {
     id: internalId,
-    polarId: polarPrice.id,
+    polarId: priceAny.id as string,
     productId: internalProductId,
-    polarProductId: polarPrice.productId,
-    amountType: polarPrice.amountType,
-    priceCurrency: polarPrice.priceCurrency || null,
-    priceAmount: polarPrice.priceAmount || null,
-    recurringInterval: polarPrice.recurringInterval || null,
-    isArchived: polarPrice.isArchived ?? false,
-    metadata: polarPrice.metadata ? JSON.stringify(polarPrice.metadata) : null,
+    polarProductId,
+    amountType: priceAny.amountType as string,
+    priceCurrency: (priceAny.priceCurrency as string) || null,
+    priceAmount: (priceAny.priceAmount as number) || null,
+    recurringInterval: null, // Recurring interval is on product, not price
+    isArchived: (priceAny.isArchived as boolean) ?? false,
+    metadata: priceAny.metadata ? JSON.stringify(priceAny.metadata) : null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -170,7 +174,7 @@ function buildPriceData(
  */
 async function upsertProduct(
   db: ReturnType<typeof drizzle>,
-  productData: NewProduct,
+  productData: NewProductRecord,
   internalId: string
 ) {
   const existing = await db
@@ -197,7 +201,7 @@ async function upsertProduct(
  */
 async function upsertPrice(
   db: ReturnType<typeof drizzle>,
-  priceData: NewPrice,
+  priceData: NewPriceRecord,
   internalId: string
 ) {
   const existing = await db
@@ -243,10 +247,13 @@ export function createSQLiteAdapter(
 
     async syncPrices(polarPrices) {
       for (const polarPrice of polarPrices) {
-        const internalId = polarPrice.metadata?.internal_price_id as
-          | string
+        const priceAny = polarPrice as Record<string, unknown>;
+        const metadata = priceAny.metadata as
+          | Record<string, unknown>
           | undefined;
-        const internalProductId = polarPrice.metadata?.internal_product_id as
+
+        const internalId = metadata?.internal_price_id as string | undefined;
+        const internalProductId = metadata?.internal_product_id as
           | string
           | undefined;
 
@@ -257,7 +264,8 @@ export function createSQLiteAdapter(
         const priceData = buildPriceData(
           polarPrice,
           internalId,
-          internalProductId
+          internalProductId,
+          '' // polarProductId not available from price alone
         );
         await upsertPrice(db, priceData, internalId);
       }

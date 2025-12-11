@@ -1,26 +1,7 @@
-import type { Context, PolarPrice, PolarProduct } from '@/definitions';
+import type { Product } from '@polar-sh/sdk/models/components/product';
+import type { ProductPrice } from '@polar-sh/sdk/models/components/productprice';
 
-// Helper type for SDK product
-interface SDKProduct {
-  id: string;
-  name: string;
-  description: string | null;
-  isRecurring: boolean;
-  isArchived: boolean;
-  organizationId: string;
-  recurringInterval: string | null;
-  metadata: Record<string, string | number | boolean>;
-  prices?: Array<{
-    id: string;
-    amountType: string;
-    type: string;
-    isArchived: boolean;
-    priceCurrency?: string;
-    priceAmount?: number;
-    recurringInterval?: string;
-    metadata?: Record<string, string | number | boolean>;
-  }>;
-}
+import type { Context } from '@/definitions';
 
 // ========================================================================
 // FIND OPERATIONS (PRECISE SEARCH)
@@ -30,7 +11,7 @@ interface SDKProduct {
 export async function findPolarProduct(
   ctx: Context,
   input: { internalProductId: string; organizationId: string }
-): Promise<PolarProduct | null> {
+): Promise<Product | null> {
   const { internalProductId, organizationId } = input;
   const { metadata } = ctx.config;
 
@@ -40,7 +21,7 @@ export async function findPolarProduct(
   });
 
   // Access items from the response
-  const items = (response as unknown as { items: SDKProduct[] }).items || [];
+  const items = (response as unknown as { items: Product[] }).items || [];
 
   for (const product of items) {
     if (
@@ -48,17 +29,7 @@ export async function findPolarProduct(
       product.metadata?.[metadata.managedByField] === metadata.managedByValue &&
       !product.isArchived
     ) {
-      return {
-        id: product.id,
-        name: product.name,
-        description: product.description ?? undefined,
-        isRecurring: product.isRecurring,
-        isArchived: product.isArchived,
-        organizationId: product.organizationId,
-        recurringInterval:
-          (product.recurringInterval as 'month' | 'year') ?? undefined,
-        metadata: product.metadata as Record<string, string | number | boolean>,
-      };
+      return product;
     }
   }
 
@@ -69,41 +40,29 @@ export async function findPolarProduct(
 export async function findPolarPrice(
   ctx: Context,
   input: { internalPriceId: string; polarProductId: string }
-): Promise<PolarPrice | null> {
+): Promise<ProductPrice | null> {
   const { internalPriceId, polarProductId } = input;
   const { metadata } = ctx.config;
 
   // Get product to access its prices
-  const product = (await ctx.polarClient.products.get({
+  const product = await ctx.polarClient.products.get({
     id: polarProductId,
-  })) as unknown as SDKProduct;
+  });
 
   if (!product.prices) {
     return null;
   }
 
   // Find price by metadata
-  for (const p of product.prices) {
+  for (const price of product.prices) {
+    const priceMetadata = (price as { metadata?: Record<string, unknown> })
+      .metadata;
     if (
-      p.metadata?.[metadata.priceIdField] === internalPriceId &&
-      p.metadata?.[metadata.managedByField] === metadata.managedByValue &&
-      !p.isArchived
+      priceMetadata?.[metadata.priceIdField] === internalPriceId &&
+      priceMetadata?.[metadata.managedByField] === metadata.managedByValue &&
+      !(price as { isArchived?: boolean }).isArchived
     ) {
-      return {
-        id: p.id,
-        amountType: p.amountType as 'free' | 'fixed' | 'custom',
-        type: p.type as 'one_time' | 'recurring',
-        priceCurrency: p.priceCurrency || 'usd',
-        priceAmount: p.priceAmount,
-        recurringInterval: p.recurringInterval as
-          | 'day'
-          | 'month'
-          | 'week'
-          | 'year'
-          | undefined,
-        isArchived: p.isArchived,
-        metadata: p.metadata as Record<string, string | number | boolean>,
-      };
+      return price as ProductPrice;
     }
   }
 
@@ -118,20 +77,20 @@ export async function findPolarPrice(
 export async function listPolarProducts(
   ctx: Context,
   options: { showAll?: boolean; organizationId: string }
-): Promise<PolarProduct[]> {
+): Promise<Product[]> {
   const { showAll = false, organizationId } = options;
   ctx.logger.info(
     `Fetching ${showAll ? 'all' : 'managed'} products from Polar...`
   );
 
-  const allPolarProducts: PolarProduct[] = [];
+  const allPolarProducts: Product[] = [];
 
   const response = await ctx.polarClient.products.list({
     organizationId,
   });
 
   // Access items from the response
-  const items = (response as unknown as { items: SDKProduct[] }).items || [];
+  const items = (response as unknown as { items: Product[] }).items || [];
 
   for (const product of items) {
     const isManaged =
@@ -140,17 +99,7 @@ export async function listPolarProducts(
         ctx.config.metadata.managedByValue;
 
     if (showAll || isManaged) {
-      allPolarProducts.push({
-        id: product.id,
-        name: product.name,
-        description: product.description ?? undefined,
-        isRecurring: product.isRecurring,
-        isArchived: product.isArchived,
-        organizationId: product.organizationId,
-        recurringInterval:
-          (product.recurringInterval as 'month' | 'year') ?? undefined,
-        metadata: product.metadata as Record<string, string | number | boolean>,
-      });
+      allPolarProducts.push(product);
     }
   }
 
@@ -161,13 +110,13 @@ export async function listPolarProducts(
 export async function listPolarPrices(
   ctx: Context,
   options: { showAll?: boolean; organizationId: string }
-): Promise<PolarPrice[]> {
+): Promise<ProductPrice[]> {
   const { showAll = false, organizationId } = options;
   ctx.logger.info(
     `Fetching ${showAll ? 'all' : 'managed'} prices from Polar...`
   );
 
-  const allPolarPrices: PolarPrice[] = [];
+  const allPolarPrices: ProductPrice[] = [];
 
   // Get all products first, then extract prices
   const response = await ctx.polarClient.products.list({
@@ -175,36 +124,23 @@ export async function listPolarPrices(
   });
 
   // Access items from the response
-  const items = (response as unknown as { items: SDKProduct[] }).items || [];
+  const items = (response as unknown as { items: Product[] }).items || [];
 
   for (const product of items) {
     if (!product.prices) {
       continue;
     }
 
-    for (const p of product.prices) {
+    for (const price of product.prices) {
+      const priceMetadata = (price as { metadata?: Record<string, unknown> })
+        .metadata;
       const isManaged =
-        p.metadata?.[ctx.config.metadata.priceIdField] &&
-        p.metadata?.[ctx.config.metadata.managedByField] ===
+        priceMetadata?.[ctx.config.metadata.priceIdField] &&
+        priceMetadata?.[ctx.config.metadata.managedByField] ===
           ctx.config.metadata.managedByValue;
 
       if (showAll || isManaged) {
-        allPolarPrices.push({
-          id: p.id,
-          amountType: p.amountType as 'free' | 'fixed' | 'custom',
-          type: p.type as 'one_time' | 'recurring',
-          priceCurrency: p.priceCurrency || 'usd',
-          priceAmount: p.priceAmount,
-          recurringInterval: p.recurringInterval as
-            | 'day'
-            | 'month'
-            | 'week'
-            | 'year'
-            | undefined,
-          isArchived: p.isArchived,
-          metadata: p.metadata as Record<string, string | number | boolean>,
-          productId: product.id,
-        });
+        allPolarPrices.push(price as ProductPrice);
       }
     }
   }

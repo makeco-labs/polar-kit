@@ -1,15 +1,14 @@
+import type { Product } from '@polar-sh/sdk/models/components/product';
+import type { ProductPrice } from '@polar-sh/sdk/models/components/productprice';
 import { z } from 'zod';
-
-import type { PolarPrice } from './polar-price.schemas';
-import type { PolarProduct } from './polar-product.schemas';
 
 // ========================================================================
 // DATABASE ADAPTER TYPES & SCHEMAS
 // ========================================================================
 
 export interface DatabaseAdapter {
-  syncProducts(products: PolarProduct[]): Promise<void>;
-  syncPrices(prices: PolarPrice[]): Promise<void>;
+  syncProducts(products: Product[]): Promise<void>;
+  syncPrices(prices: ProductPrice[]): Promise<void>;
   clearProducts(): Promise<void>;
   clearPrices(): Promise<void>;
   getProducts?(): Promise<unknown[]>;

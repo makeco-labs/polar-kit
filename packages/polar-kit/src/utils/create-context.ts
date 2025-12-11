@@ -1,6 +1,5 @@
 import type { Config, Context, DatabaseAdapter } from '@/definitions';
 import { createLogger } from './create-logger';
-import { createMappers } from './create-mappers';
 import { createPolarClient } from './polar-client';
 
 /**
@@ -20,13 +19,9 @@ export function createContext(input: {
     POLAR_ACCESS_TOKEN: polarAccessToken,
   });
 
-  // Create mappers for Polar operations
-  const mappers = createMappers(config);
-
   return {
     logger,
     polarClient,
-    mappers,
     adapter,
     env: process.env,
     config,

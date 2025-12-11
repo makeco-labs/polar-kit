@@ -77,7 +77,9 @@ async function runArchivePreflight(
   // Get product IDs to archive
   const productIdsToArchive = config.productIds
     ? Object.values(config.productIds)
-    : config.plans.map((plan) => plan.product.id);
+    : config.plans
+        .map((plan) => plan.metadata?.[config.metadata.productIdField])
+        .filter((id): id is string => typeof id === 'string');
 
   return {
     ctx,

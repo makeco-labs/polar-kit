@@ -1,3 +1,5 @@
+import type { Product } from '@polar-sh/sdk/models/components/product';
+import type { ProductCreate } from '@polar-sh/sdk/models/components/productcreate';
 import chalk from 'chalk';
 import type { Command as CommandType } from 'commander';
 import { Command, Option } from 'commander';
@@ -6,12 +8,7 @@ import {
   determineEnvironment,
   requireProductionConfirmation,
 } from '@/cli-prompts';
-import type {
-  Context,
-  EnvironmentKey,
-  PolarProduct,
-  SubscriptionPlan,
-} from '@/definitions';
+import type { Context, EnvironmentKey } from '@/definitions';
 import { ENV_CHOICES } from '@/definitions';
 import {
   createContext,
@@ -31,7 +28,7 @@ interface CreateOptions {
 
 interface CreatePreflightResult {
   ctx: Context;
-  plans: SubscriptionPlan[];
+  plans: ProductCreate[];
   chosenEnv: EnvironmentKey;
   organizationId: string;
 }
@@ -92,21 +89,27 @@ async function runCreatePreflight(
 
 async function ensurePolarSubscriptionPlans(
   ctx: Context,
-  input: { plans: SubscriptionPlan[]; organizationId: string }
+  input: { plans: ProductCreate[]; organizationId: string }
 ): Promise<void> {
   const { plans, organizationId } = input;
   ctx.logger.info('Ensuring Polar subscription plans exist...');
 
   for (const plan of plans) {
+    const internalProductId =
+      plan.metadata?.[ctx.config.metadata.productIdField];
     ctx.logger.info(
-      `Processing plan: ${plan.product.name} (Internal ID: ${plan.product.id})...`
+      `Processing plan: ${plan.name} (Internal ID: ${internalProductId ?? 'none'})...`
     );
     try {
-      // 1. Ensure Product Exists
-      let polarProduct: PolarProduct | null = await findPolarProduct(ctx, {
-        internalProductId: plan.product.id,
-        organizationId,
-      });
+      // 1. Check if Product Exists
+      let polarProduct: Product | null = null;
+
+      if (internalProductId) {
+        polarProduct = await findPolarProduct(ctx, {
+          internalProductId: String(internalProductId),
+          organizationId,
+        });
+      }
 
       if (polarProduct) {
         ctx.logger.info(
@@ -114,45 +117,22 @@ async function ensurePolarSubscriptionPlans(
         );
       } else {
         ctx.logger.info('  Product not found in Polar, creating...');
-        const polarProductParams =
-          ctx.mappers.mapSubscriptionPlanToPolarProduct(plan);
 
-        // Create product with prices
-        const prices = plan.prices.map((price) =>
-          ctx.mappers.mapSubscriptionPlanToPolarPrice(price, {
-            planName: plan.product.name,
-            tier: plan.product.id,
-            internalProductId: plan.product.id,
-            polarProductId: '', // Will be set by Polar
-          })
-        );
+        // Add managed_by metadata
+        const metadata = {
+          ...plan.metadata,
+          [ctx.config.metadata.managedByField]:
+            ctx.config.metadata.managedByValue,
+        };
 
-        // Call Polar API to create product
+        // Create product directly using the plan
         const createdProduct = await ctx.polarClient.products.create({
-          name: polarProductParams.name,
+          ...plan,
           organizationId,
-          recurringInterval: polarProductParams.recurringInterval ?? null,
-          description: polarProductParams.description ?? undefined,
-          metadata: polarProductParams.metadata,
-          prices: prices as Parameters<
-            typeof ctx.polarClient.products.create
-          >[0]['prices'],
+          metadata,
         });
 
-        // Convert SDK response to our PolarProduct type
-        polarProduct = {
-          id: createdProduct.id,
-          name: createdProduct.name,
-          description: createdProduct.description ?? undefined,
-          isRecurring: createdProduct.isRecurring,
-          isArchived: createdProduct.isArchived,
-          organizationId: createdProduct.organizationId,
-          recurringInterval: createdProduct.recurringInterval ?? undefined,
-          metadata: createdProduct.metadata as Record<
-            string,
-            string | number | boolean
-          >,
-        };
+        polarProduct = createdProduct;
 
         ctx.logger.info(
           `  Created product: ${polarProduct.name} (ID: ${polarProduct.id})`
@@ -162,7 +142,7 @@ async function ensurePolarSubscriptionPlans(
         if (createdProduct.prices) {
           for (const price of createdProduct.prices) {
             ctx.logger.info(
-              `    Price created: ID ${price.id} (${price.amountType})`
+              `    Price created: ID ${price.id} (${(price as { amountType?: string }).amountType})`
             );
           }
         }
@@ -171,7 +151,7 @@ async function ensurePolarSubscriptionPlans(
       ctx.logger.error({
         message: 'Error ensuring subscription plan/prices in Polar',
         error,
-        metadata: { planId: plan.product.id, planName: plan.product.name },
+        metadata: { planName: plan.name },
       });
       throw error;
     }

@@ -1,3 +1,5 @@
+import type { ProductCreate } from '@polar-sh/sdk/models/components/productcreate';
+
 import type { Config } from '@/definitions';
 import {
   createSQLiteAdapter,
@@ -16,54 +18,45 @@ export function createTestConfig(
   return {
     plans: [
       {
-        product: {
-          id: 'free',
-          name: 'Free Plan',
-          description: 'Perfect for getting started',
-          isRecurring: true,
-          isArchived: false,
+        name: 'Free Plan',
+        description: 'Perfect for getting started',
+        recurringInterval: 'month',
+        prices: [{ amountType: 'free' }],
+        metadata: {
+          internal_product_id: 'free',
         },
-        prices: [
-          {
-            id: 'free-monthly',
-            type: 'recurring',
-            amountType: 'free',
-            priceCurrency: 'usd',
-            recurringInterval: 'month',
-            isArchived: false,
-          },
-        ],
       },
       {
-        product: {
-          id: 'pro',
-          name: 'Pro Plan',
-          description: 'For growing businesses',
-          isRecurring: true,
-          isArchived: false,
-        },
+        name: 'Pro Plan',
+        description: 'For growing businesses',
+        recurringInterval: 'month',
         prices: [
           {
-            id: 'pro-monthly',
-            type: 'recurring',
             amountType: 'fixed',
             priceAmount: 2999, // $29.99
             priceCurrency: 'usd',
-            recurringInterval: 'month',
-            isArchived: false,
           },
+        ],
+        metadata: {
+          internal_product_id: 'pro-monthly',
+        },
+      },
+      {
+        name: 'Pro Plan (Annual)',
+        description: 'For growing businesses - save with annual billing',
+        recurringInterval: 'year',
+        prices: [
           {
-            id: 'pro-yearly',
-            type: 'recurring',
             amountType: 'fixed',
             priceAmount: 29_999, // $299.99 (save ~17%)
             priceCurrency: 'usd',
-            recurringInterval: 'year',
-            isArchived: false,
           },
         ],
+        metadata: {
+          internal_product_id: 'pro-yearly',
+        },
       },
-    ],
+    ] satisfies ProductCreate[],
 
     // Real test environment variables
     env: {
@@ -81,7 +74,7 @@ export function createTestConfig(
       productIdField: 'internal_product_id',
       priceIdField: 'internal_price_id',
       managedByField: 'managed_by',
-      managedByValue: '@makeco/polar-kit-integration-test',
+      managedByValue: 'polar-kit-integration-test',
     },
   };
 }
@@ -89,25 +82,20 @@ export function createTestConfig(
 /**
  * Simple test plans for quick testing scenarios
  */
-export const SIMPLE_TEST_PLANS = [
+export const SIMPLE_TEST_PLANS: ProductCreate[] = [
   {
-    product: {
-      id: 'test-basic',
-      name: 'Test Basic Plan',
-      description: 'Simple integration test plan',
-      isRecurring: true,
-      isArchived: false,
-    },
+    name: 'Test Basic Plan',
+    description: 'Simple integration test plan',
+    recurringInterval: 'month',
     prices: [
       {
-        id: 'test-basic-monthly',
-        type: 'recurring',
         amountType: 'fixed',
         priceAmount: 999, // $9.99
         priceCurrency: 'usd',
-        recurringInterval: 'month',
-        isArchived: false,
       },
     ],
+    metadata: {
+      internal_product_id: 'test-basic',
+    },
   },
-] as const;
+];

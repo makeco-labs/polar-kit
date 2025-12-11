@@ -1,3 +1,5 @@
+import type { Product } from '@polar-sh/sdk/models/components/product';
+import type { ProductCreate } from '@polar-sh/sdk/models/components/productcreate';
 import chalk from 'chalk';
 import type { Command as CommandType } from 'commander';
 import { Command, Option } from 'commander';
@@ -6,17 +8,10 @@ import {
   determineEnvironment,
   requireProductionConfirmation,
 } from '@/cli-prompts';
-import type {
-  Context,
-  EnvironmentKey,
-  PolarPrice,
-  PolarProduct,
-  SubscriptionPlan,
-} from '@/definitions';
+import type { Context, EnvironmentKey } from '@/definitions';
 import { ENV_CHOICES } from '@/definitions';
 import {
   createContext,
-  listPolarPrices,
   listPolarProducts,
   loadConfig,
   loadEnvironment,
@@ -92,16 +87,6 @@ async function runUpdatePreflight(
     );
   }
 
-  // Verify mappers are available
-  if (
-    !(
-      typeof ctx.mappers.mapSubscriptionPlanToPolarProduct === 'function' &&
-      typeof ctx.mappers.mapSubscriptionPlanToPolarPrice === 'function'
-    )
-  ) {
-    throw new Error('Polar mappers not available. Check your configuration.');
-  }
-
   // Production confirmation
   await requireProductionConfirmation({
     action: 'update Polar plans',
@@ -122,26 +107,24 @@ async function runUpdatePreflight(
 // ------------------ Update Polar Product ------------------
 async function updatePolarProduct(
   ctx: Context,
-  plan: SubscriptionPlan,
-  allPolarProducts: PolarProduct[]
+  plan: ProductCreate,
+  allPolarProducts: Product[]
 ): Promise<void> {
-  try {
-    // Generate Polar product parameters from the plan
-    const polarProductParams =
-      ctx.mappers.mapSubscriptionPlanToPolarProduct(plan);
+  const internalProductId = plan.metadata?.[ctx.config.metadata.productIdField];
 
+  try {
     // Find the product that matches our internal ID
     const polarProduct = allPolarProducts.find(
       (product) =>
         product.metadata?.[ctx.config.metadata.productIdField] ===
-          plan.product.id &&
+          internalProductId &&
         product.metadata?.[ctx.config.metadata.managedByField] ===
           ctx.config.metadata.managedByValue
     );
 
     if (!polarProduct) {
       ctx.logger.warn(
-        `Polar product not found for ${plan.product.id}. Skipping update.`
+        `Polar product not found for ${internalProductId}. Skipping update.`
       );
       return;
     }
@@ -150,9 +133,13 @@ async function updatePolarProduct(
     await ctx.polarClient.products.update({
       id: polarProduct.id,
       productUpdate: {
-        name: polarProductParams.name,
-        description: polarProductParams.description,
-        metadata: polarProductParams.metadata,
+        name: plan.name,
+        description: plan.description,
+        metadata: {
+          ...plan.metadata,
+          [ctx.config.metadata.managedByField]:
+            ctx.config.metadata.managedByValue,
+        },
       },
     });
 
@@ -161,49 +148,9 @@ async function updatePolarProduct(
     ctx.logger.error({
       message: 'Error updating Polar product',
       error,
-      productId: plan.product.id,
+      productId: String(internalProductId),
     });
     throw new Error(`Failed to update Polar product: ${error}`);
-  }
-}
-
-// ------------------ Update Polar Prices ------------------
-function updatePolarPrices(
-  ctx: Context,
-  plan: SubscriptionPlan,
-  allPolarPrices: PolarPrice[]
-): void {
-  try {
-    // For each price in the plan
-    for (const planPrice of plan.prices) {
-      // Find matching Polar price by internal ID
-      const polarPrice = allPolarPrices.find(
-        (price) =>
-          price.metadata?.[ctx.config.metadata.priceIdField] === planPrice.id &&
-          price.metadata?.[ctx.config.metadata.managedByField] ===
-            ctx.config.metadata.managedByValue
-      );
-
-      if (!polarPrice) {
-        ctx.logger.warn(
-          `Polar price not found for ${planPrice.id}. Skipping update.`
-        );
-        continue;
-      }
-
-      // Note: Polar may have limited price update capabilities
-      // Log that the price was found
-      ctx.logger.info(
-        `Found Polar price: ${polarPrice.id} (metadata updates may be limited)`
-      );
-    }
-  } catch (error) {
-    ctx.logger.error({
-      message: 'Error updating Polar prices',
-      error,
-      planId: plan.product.id,
-    });
-    throw new Error(`Failed to update Polar prices: ${error}`);
   }
 }
 
@@ -218,31 +165,26 @@ async function updatePolarSubscriptionPlansAction(
   ctx.logger.info(`Updating ${plans.length} subscription plans in Polar...`);
 
   try {
-    // Fetch all managed products and prices once to avoid multiple API calls
+    // Fetch all managed products once to avoid multiple API calls
     const allPolarProducts = await listPolarProducts(ctx, {
-      showAll: false,
-      organizationId,
-    });
-    const allPolarPrices = await listPolarPrices(ctx, {
       showAll: false,
       organizationId,
     });
 
     ctx.logger.info(
-      `Found ${allPolarProducts.length} managed products and ${allPolarPrices.length} managed prices in Polar`
+      `Found ${allPolarProducts.length} managed products in Polar`
     );
 
     // Update each plan
     for (const plan of plans) {
+      const internalProductId =
+        plan.metadata?.[ctx.config.metadata.productIdField];
       ctx.logger.info(
-        `Updating plan: ${plan.product.name} (Internal ID: ${plan.product.id})...`
+        `Updating plan: ${plan.name} (Internal ID: ${internalProductId ?? 'none'})...`
       );
 
       // Update the product
       await updatePolarProduct(ctx, plan, allPolarProducts);
-
-      // Update the prices
-      updatePolarPrices(ctx, plan, allPolarPrices);
     }
 
     ctx.logger.info('Finished updating subscription plans in Polar');

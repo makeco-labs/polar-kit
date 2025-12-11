@@ -1,4 +1,6 @@
 import { defineConfig } from '@makeco/polar-kit';
+
+import type { ProductCreate } from '@makeco/polar-kit';
 // This import chain should cause the ESM resolution issue:
 // polar.config.ts -> ./src/database-adapter.ts -> @demo/esm-db (workspace package)
 import { serverDatabaseAdapter } from './src/database-adapter';
@@ -17,26 +19,21 @@ if (!polarOrganizationId) {
 export default defineConfig({
   plans: [
     {
-      product: {
-        id: 'basic',
-        name: 'Basic Plan',
-        description: 'ESM test plan',
-        isRecurring: true,
-        isArchived: false,
-      },
+      name: 'Basic Plan',
+      description: 'ESM test plan',
+      recurringInterval: 'month',
       prices: [
         {
-          id: 'basic-monthly',
-          type: 'recurring',
           amountType: 'fixed',
           priceAmount: 999, // $9.99
           priceCurrency: 'usd',
-          recurringInterval: 'month',
-          isArchived: false,
         },
       ],
+      metadata: {
+        internal_product_id: 'basic',
+      },
     },
-  ],
+  ] satisfies ProductCreate[],
 
   // Environment variables
   env: {

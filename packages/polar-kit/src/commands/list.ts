@@ -1,3 +1,4 @@
+import type { ProductPrice } from '@polar-sh/sdk/models/components/productprice';
 import chalk from 'chalk';
 import type { Command as CommandType } from 'commander';
 import { Command, Option } from 'commander';
@@ -6,7 +7,6 @@ import type { Context, DatabaseAdapter, EnvironmentKey } from '@/definitions';
 import { ENV_CHOICES } from '@/definitions';
 import {
   createContext,
-  listPolarPrices,
   listPolarProducts,
   loadConfig,
   loadEnvironment,
@@ -187,6 +187,73 @@ async function runListPricesPreflight(
   };
 }
 
+// ------------------ HELPERS ------------------
+
+function displayPrice(
+  price: ProductPrice,
+  productId: string,
+  ctx: Context,
+  showAll: boolean
+): void {
+  // Type-safe access to common and variant-specific properties
+  const priceAny = price as Record<string, unknown>;
+  const id = priceAny.id as string;
+  const amountType = priceAny.amountType as string;
+  const isArchived = priceAny.isArchived as boolean | undefined;
+  const metadata = priceAny.metadata as Record<string, unknown> | undefined;
+
+  const isManaged =
+    metadata?.[ctx.config.metadata.priceIdField] &&
+    metadata?.[ctx.config.metadata.managedByField] ===
+      ctx.config.metadata.managedByValue;
+
+  console.log(`${chalk.bold(id)}`);
+  console.log(`  ${chalk.dim('Product:')} ${productId}`);
+  console.log(`  ${chalk.dim('Archived:')} ${isArchived ?? 'N/A'}`);
+  console.log(`  ${chalk.dim('Amount Type:')} ${amountType}`);
+
+  // Fixed price specific
+  if (amountType === 'fixed') {
+    const priceAmount = priceAny.priceAmount as number | undefined;
+    const priceCurrency = priceAny.priceCurrency as string | undefined;
+    if (priceAmount !== undefined) {
+      console.log(
+        `  ${chalk.dim('Amount:')} ${(priceAmount / 100).toFixed(2)} ${(priceCurrency || 'USD').toUpperCase()}`
+      );
+    }
+  }
+
+  // Custom price specific
+  if (amountType === 'custom') {
+    const minimumAmount = priceAny.minimumAmount as number | undefined;
+    const maximumAmount = priceAny.maximumAmount as number | undefined;
+    if (minimumAmount !== undefined) {
+      console.log(
+        `  ${chalk.dim('Min Amount:')} ${(minimumAmount / 100).toFixed(2)}`
+      );
+    }
+    if (maximumAmount !== undefined) {
+      console.log(
+        `  ${chalk.dim('Max Amount:')} ${(maximumAmount / 100).toFixed(2)}`
+      );
+    }
+  }
+
+  if (metadata) {
+    console.log(
+      `  ${chalk.dim('Internal ID:')} ${(metadata[ctx.config.metadata.priceIdField] as string) || 'N/A'}`
+    );
+  }
+
+  if (showAll) {
+    console.log(
+      `  Managed: ${isManaged ? chalk.green('Yes') : chalk.yellow('No')}`
+    );
+  }
+
+  console.log('');
+}
+
 // ------------------ ACTION ------------------
 
 async function listPolarPricesAction(
@@ -196,52 +263,45 @@ async function listPolarPricesAction(
   const { showAll = false, organizationId } = options;
 
   try {
-    const prices = await listPolarPrices(ctx, { showAll, organizationId });
+    // Get products to access their prices (prices are embedded in products)
+    const polarProducts = await listPolarProducts(ctx, {
+      showAll,
+      organizationId,
+    });
 
-    if (prices.length === 0) {
-      ctx.logger.info('No prices found in Polar.');
-      return;
-    }
+    let totalPrices = 0;
 
     ctx.logger.info(
-      `Found ${prices.length} ${showAll ? '' : 'managed '}prices in Polar:`
+      `Listing ${showAll ? 'all' : 'managed'} prices from Polar...`
     );
-    for (const price of prices) {
-      const isManaged =
-        'metadata' in price &&
-        price.metadata?.[ctx.config.metadata.priceIdField] &&
-        price.metadata?.[ctx.config.metadata.managedByField] ===
-          ctx.config.metadata.managedByValue;
 
-      console.log(`${chalk.bold(price.id)}`);
-      console.log(`  ${chalk.dim('Product:')} ${price.productId}`);
-      console.log(`  ${chalk.dim('Archived:')} ${price.isArchived}`);
-      console.log(`  ${chalk.dim('Amount Type:')} ${price.amountType}`);
-      console.log(`  ${chalk.dim('Type:')} ${price.type}`);
-
-      if (price.type === 'recurring' && 'recurringInterval' in price) {
-        console.log(`  ${chalk.dim('Interval:')} ${price.recurringInterval}`);
+    for (const product of polarProducts) {
+      if (!product.prices || product.prices.length === 0) {
+        continue;
       }
 
-      if (price.amountType === 'fixed' && 'priceAmount' in price) {
-        console.log(
-          `  ${chalk.dim('Amount:')} ${((price.priceAmount || 0) / 100).toFixed(2)} ${'priceCurrency' in price ? String(price.priceCurrency).toUpperCase() : 'USD'}`
-        );
-      }
+      for (const price of product.prices) {
+        const priceAny = price as Record<string, unknown>;
+        const metadata = priceAny.metadata as
+          | Record<string, unknown>
+          | undefined;
 
-      if ('metadata' in price) {
-        console.log(
-          `  ${chalk.dim('Internal ID:')} ${price.metadata?.[ctx.config.metadata.priceIdField] || 'N/A'}`
-        );
-      }
+        const isManaged =
+          metadata?.[ctx.config.metadata.priceIdField] &&
+          metadata?.[ctx.config.metadata.managedByField] ===
+            ctx.config.metadata.managedByValue;
 
-      if (showAll) {
-        console.log(
-          `  Managed: ${isManaged ? chalk.green('Yes') : chalk.yellow('No')}`
-        );
+        if (showAll || isManaged) {
+          displayPrice(price as ProductPrice, product.id, ctx, showAll);
+          totalPrices++;
+        }
       }
+    }
 
-      console.log('');
+    if (totalPrices === 0) {
+      ctx.logger.info('No prices found in Polar.');
+    } else {
+      ctx.logger.info(`Found ${totalPrices} prices in Polar.`);
     }
   } catch (error) {
     ctx.logger.error('Error listing prices:', error);

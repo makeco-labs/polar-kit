@@ -1,6 +1,6 @@
 import type { Polar } from '@polar-sh/sdk';
 
-import type { Config, PolarMappers } from './config.schemas';
+import type { Config } from './config.schemas';
 import type { DatabaseAdapter } from './database-adapter.schemas';
 
 // ========================================================================
@@ -17,7 +17,6 @@ export interface Logger {
 export interface Context {
   logger: Logger;
   env: Record<string, string | undefined>;
-  mappers: PolarMappers;
   adapter: DatabaseAdapter;
   polarClient: Polar;
   config: Config;

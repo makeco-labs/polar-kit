@@ -1,59 +1,16 @@
-import type {
-  Prices,
-  ProductCreate,
-} from '@polar-sh/sdk/models/components/productcreate';
+import type { ProductCreate } from '@polar-sh/sdk/models/components/productcreate';
 import { z } from 'zod';
 import type { DatabaseAdapter } from './database-adapter.schemas';
 import { databaseAdapterSchema } from './database-adapter.schemas';
-import type { PolarPrice } from './polar-price.schemas';
-import { polarPriceSchema } from './polar-price.schemas';
-import { polarProductSchema } from './polar-product.schemas';
 import type { Prettify } from './utility.types';
-
-// ========================================================================
-// SUBSCRIPTION PLAN SCHEMA (COMBINES PRODUCT + PRICES)
-// ========================================================================
-
-export const subscriptionPlanSchema = z.object({
-  // Product configuration
-  product: polarProductSchema,
-
-  // Associated prices
-  prices: z.array(polarPriceSchema).min(1),
-});
-
-export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>;
-
-// ========================================================================
-// POLAR MAPPER TYPES
-// ========================================================================
-
-export interface PolarPriceContext {
-  polarProductId: string;
-  internalProductId: string;
-  planName: string;
-  tier: string;
-}
-
-export interface PolarMappers {
-  mapSubscriptionPlanToPolarProduct: (plan: SubscriptionPlan) => Omit<
-    ProductCreate,
-    'prices' | 'recurringInterval'
-  > & {
-    recurringInterval?: 'month' | 'year';
-  };
-  mapSubscriptionPlanToPolarPrice: (
-    price: PolarPrice,
-    context: PolarPriceContext
-  ) => Prices;
-}
 
 // ========================================================================
 // MAIN CONFIGURATION SCHEMA
 // ========================================================================
 
 export const configSchema = z.object({
-  plans: z.array(subscriptionPlanSchema),
+  // Plans are ProductCreate[] from Polar SDK - validated at runtime by SDK
+  plans: z.array(z.any()),
   env: z.object({
     polarAccessToken: z.string(),
     organizationId: z.string().optional(),
@@ -65,18 +22,19 @@ export const configSchema = z.object({
       productIdField: z.string().default('internal_product_id'),
       priceIdField: z.string().default('internal_price_id'),
       managedByField: z.string().default('managed_by'),
-      managedByValue: z.string().default('@makeco/polar-kit'),
+      managedByValue: z.string().default('polar-kit'),
     })
     .default({
       productIdField: 'internal_product_id',
       priceIdField: 'internal_price_id',
       managedByField: 'managed_by',
-      managedByValue: '@makeco/polar-kit',
+      managedByValue: 'polar-kit',
     }),
 });
 
 export type Config = Prettify<
-  Omit<z.infer<typeof configSchema>, 'adapters'> & {
+  Omit<z.infer<typeof configSchema>, 'adapters' | 'plans'> & {
     adapters: Record<string, DatabaseAdapter>;
+    plans: ProductCreate[];
   }
 >;

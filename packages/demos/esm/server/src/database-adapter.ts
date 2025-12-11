@@ -1,6 +1,7 @@
 import { db, products, prices, eq } from '@demo/esm-db';
 
 import type { DatabaseAdapter } from '@makeco/polar-kit';
+
 /**
  * Server-side database adapter that imports from ESM workspace package
  * This should demonstrate the ESM import resolution issue
@@ -49,8 +50,12 @@ export const serverDatabaseAdapter: DatabaseAdapter = {
 
   async syncPrices(polarPrices) {
     for (const polarPrice of polarPrices) {
-      const internalId = polarPrice.metadata?.internal_price_id;
-      const internalProductId = polarPrice.metadata?.internal_product_id;
+      // Type-safe access to price properties (ProductPrice is a union type)
+      const priceAny = polarPrice as Record<string, unknown>;
+      const metadata = priceAny.metadata as Record<string, unknown> | undefined;
+
+      const internalId = metadata?.internal_price_id as string | undefined;
+      const internalProductId = metadata?.internal_product_id as string | undefined;
 
       if (!(internalId || internalProductId)) {
         continue;
@@ -64,16 +69,16 @@ export const serverDatabaseAdapter: DatabaseAdapter = {
 
       const priceData = {
         id: String(internalId),
-        polarId: polarPrice.id,
+        polarId: priceAny.id as string,
         productId: internalProductId ? String(internalProductId) : null,
-        polarProductId: polarPrice.productId,
-        currency: polarPrice.priceCurrency || 'usd',
-        unitAmount: polarPrice.priceAmount || null,
-        interval: polarPrice.recurringInterval || null,
+        polarProductId: null, // Not available from ProductPrice directly
+        currency: (priceAny.priceCurrency as string) || 'usd',
+        unitAmount: (priceAny.priceAmount as number) || null,
+        interval: null, // recurringInterval is on product, not price
         intervalCount: 1,
         nickname: null,
-        active: !polarPrice.isArchived,
-        metadata: polarPrice.metadata || null,
+        active: !(priceAny.isArchived as boolean),
+        metadata: metadata || null,
         updatedAt: new Date(),
       };
 
