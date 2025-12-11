@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/makeco-labs/polar-kit/compare/v1.0.0...v1.0.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* Updated mapper output type ([00faf68](https://github.com/makeco-labs/polar-kit/commit/00faf68075ec9217c6b4f5bc7ab4808dff5db335))
+
 # 1.0.0 (2025-12-11)
 
 
