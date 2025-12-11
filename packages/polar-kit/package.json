@@ -1,0 +1,85 @@
+{
+  "name": "@makeco/polar-kit",
+  "version": "0.1.0",
+  "author": "makeco",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/makeco-labs/polar-kit.git"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "polar-kit": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/makeco-labs/polar-kit/issues"
+  },
+  "description": "A CLI tool for creating, archiving, updating Polar products and prices and syncing them to your database.",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "homepage": "https://github.com/makeco-labs/polar-kit",
+  "keywords": [
+    "polar",
+    "billing",
+    "subscription",
+    "cli",
+    "payments",
+    "typescript",
+    "saas"
+  ],
+  "license": "MIT",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "bun clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json --resolve-full-paths && chmod +x dist/cli.js",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "dev:typecheck": "bun typecheck --watch --preserveWatchOutput",
+    "lint": "bunx ultracite@latest lint",
+    "format": "bunx ultracite@latest format",
+    "test": "vitest",
+    "ci": "bun format && bun lint && bun typecheck && bun run build",
+    "git": "bun ci && git add . && git commit -m",
+    "postgit": "git push --all"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.0.0",
+    "@types/prompts": "^2.4.9",
+    "better-sqlite3": "^12.2.0",
+    "eslint": "^9.29.0",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3",
+    "ultracite": "^5.1.2",
+    "vitest": "^3.2.4"
+  },
+  "type": "module",
+  "dependencies": {
+    "@polar-sh/sdk": "^0.29.0",
+    "chalk": "^5.2.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.24.0",
+    "esbuild-register": "^3.6.0",
+    "prompts": "^2.4.2",
+    "zod": "^4.0.14"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.44.4"
+  }
+}

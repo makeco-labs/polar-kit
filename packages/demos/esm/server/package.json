@@ -1,0 +1,16 @@
+{
+	"name": "@demo/esm-server",
+	"version": "1.0.0",
+	"description": "ESM server package for testing stripe-kit config loading",
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"stripe": "bunx @makeco/stripe-kit -c stripe.config.ts"
+	},
+	"dependencies": {
+		"@demo/esm-db": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.0"
+	}
+}

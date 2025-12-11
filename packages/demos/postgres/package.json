@@ -1,0 +1,20 @@
+{
+  "name": "@demo/postgres",
+  "version": "1.0.0",
+  "description": "Example project using stripe-kit",
+  "type": "module",
+  "scripts": {
+    "stripe": "bunx @makeco/stripe-kit -c stripe.config.ts",
+    "db": "bunx @makeco/db-cli -c db.config.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.4",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.0",
+    "dotenv-cli": "^10.0.0",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.0.0"
+  }
+}

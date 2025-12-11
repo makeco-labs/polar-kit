@@ -1,0 +1,25 @@
+name: stripe-kit-dev
+
+# Test databases for stripe-kit development and examples
+# Usage: docker compose up -d
+
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: stripe-kit-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - stripe-kit-dev-postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  stripe-kit-dev-postgres_data:
