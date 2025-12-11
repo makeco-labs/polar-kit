@@ -51,9 +51,9 @@
     "dev": "tsc -p tsconfig.build.json --watch",
     "dev:typecheck": "bun typecheck --watch --preserveWatchOutput",
     "lint": "bunx ultracite@latest lint",
-    "format": "bunx ultracite@latest format",
+    "fix": "bunx ultracite@latest fix",
     "test": "vitest",
-    "ci": "bun format && bun lint && bun typecheck && bun run build",
+    "ci": "bun fix && bun lint && bun typecheck && bun run build",
     "git": "bun ci && git add . && git commit -m",
     "postgit": "git push --all"
   },

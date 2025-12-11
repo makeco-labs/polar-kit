@@ -13,7 +13,7 @@
 		"build": "turbo run build",
 		"lint": "turbo run lint",
 		"typecheck": "turbo run typecheck",
-		"format": "turbo run format",
+		"fix": "turbo run fix",
 		"test": "turbo run test",
 		"ci": "turbo run ci",
 		"git": "bun run ci && git add . && git commit -m",

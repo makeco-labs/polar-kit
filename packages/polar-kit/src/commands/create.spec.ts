@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cli, getTestOrganizationId, getTestPolarToken } from '../test-utils/helpers';
+import {
+  cli,
+  getTestOrganizationId,
+  getTestPolarToken,
+} from '../test-utils/helpers';
 
 describe('polar-kit create', () => {
   let configPath: string;

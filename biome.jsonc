@@ -19,7 +19,8 @@
         "noNestedTernary": "warn"
       },
       "complexity": {
-        "noExcessiveCognitiveComplexity": "warn"
+        "noExcessiveCognitiveComplexity": "off",
+        "noBannedTypes": "off"
       }
     }
   }

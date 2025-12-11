@@ -13,7 +13,7 @@
     "lint": {
 			"outputs": []
     },
-    "format": {
+    "fix": {
 			"outputs": []
 		},
     "typecheck": {
