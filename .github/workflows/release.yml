@@ -40,6 +40,9 @@ jobs:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Remove lockfile for npm compatibility
+        run: rm -f bun.lockb bun.lock package-lock.json
+
       - name: Release
         working-directory: packages/polar-kit
         run: npx semantic-release
