@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cli } from '../helpers';
+import { cli } from '../test-utils/helpers';
 
 const VERSION_REGEX = /\d+\.\d+\.\d+/;
 

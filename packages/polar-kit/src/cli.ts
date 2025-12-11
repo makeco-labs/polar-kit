@@ -3,16 +3,7 @@
 import { Command } from 'commander';
 
 // Import all commands from barrel export
-import {
-  archive,
-  config,
-  create,
-  db,
-  list,
-  sync,
-  update,
-  urls,
-} from './commands';
+import { archive, config, create, db, list, update, urls } from './commands';
 
 // Handle process signals (simple and reliable)
 process.on('SIGINT', () => process.exit(0));
@@ -46,7 +37,6 @@ function main() {
     .addCommand(create)
     .addCommand(archive)
     .addCommand(config)
-    .addCommand(sync)
     .addCommand(update)
     .addCommand(db)
     .addCommand(list)

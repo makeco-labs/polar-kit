@@ -4,7 +4,7 @@ import {
   type createTestDatabase,
   getTestOrganizationId,
   getTestPolarToken,
-} from '../helpers';
+} from './helpers';
 
 /**
  * Creates a test configuration for real Polar integration testing

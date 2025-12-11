@@ -7,54 +7,47 @@ import { ENV_CHOICES } from '@/definitions';
 import {
   createContext,
   listPolarPrices,
+  listPolarProducts,
   loadConfig,
   loadEnvironment,
 } from '@/utils';
 
 // ========================================================================
-// TYPES
+// PRODUCTS
 // ========================================================================
 
-interface ListPricesOptions {
+// ------------------ TYPES ------------------
+
+interface ListProductsOptions {
   env?: EnvironmentKey;
   all?: boolean;
 }
 
-interface ListPricesPreflightResult {
+interface ListProductsPreflightResult {
   ctx: Context;
   showAll: boolean;
   chosenEnv: EnvironmentKey;
   organizationId: string;
 }
 
-// ========================================================================
-// PREFLIGHT
-// ========================================================================
+// ------------------ PREFLIGHT ------------------
 
-async function runListPricesPreflight(
-  options: ListPricesOptions,
+async function runListProductsPreflight(
+  options: ListProductsOptions,
   command: CommandType
-): Promise<ListPricesPreflightResult> {
-  // Get global config option from parent command
+): Promise<ListProductsPreflightResult> {
   const globalOptions = command.parent?.opts() || {};
   const configPath = globalOptions.config;
 
-  // Determine environment
   const chosenEnv = await determineEnvironment({ envInput: options.env });
-
-  // Load environment variables
   loadEnvironment(chosenEnv);
 
-  // Load configuration
   const config = await loadConfig({ configPath });
-
-  // Create context without specific adapter (doesn't need database)
   const ctx = createContext({
     adapter: Object.values(config.adapters)[0] as DatabaseAdapter,
     config,
   });
 
-  // Get organization ID
   const organizationId = ctx.config.env.organizationId;
   if (!organizationId) {
     throw new Error('organizationId is required in config.env');
@@ -68,9 +61,133 @@ async function runListPricesPreflight(
   };
 }
 
+// ------------------ ACTION ------------------
+
+async function listPolarProductsAction(
+  ctx: Context,
+  options: { showAll?: boolean; organizationId: string }
+): Promise<void> {
+  const { showAll = false, organizationId } = options;
+
+  try {
+    const products = await listPolarProducts(ctx, { showAll, organizationId });
+
+    if (products.length === 0) {
+      ctx.logger.info('No products found in Polar.');
+      return;
+    }
+
+    ctx.logger.info(
+      `Found ${products.length} ${showAll ? '' : 'managed '}products in Polar:`
+    );
+    for (const product of products) {
+      const isManaged =
+        product.metadata?.[ctx.config.metadata.productIdField] &&
+        product.metadata?.[ctx.config.metadata.managedByField] ===
+          ctx.config.metadata.managedByValue;
+
+      console.log(`${chalk.bold(product.id)}`);
+      console.log(`  ${chalk.dim('Name:')} ${product.name}`);
+      console.log(`  ${chalk.dim('Archived:')} ${product.isArchived}`);
+      console.log(
+        `  ${chalk.dim('Description:')} ${product.description || 'N/A'}`
+      );
+      console.log(
+        `  ${chalk.dim('Recurring:')} ${product.isRecurring ? 'Yes' : 'No'}`
+      );
+      console.log(
+        `  ${chalk.dim('Internal ID:')} ${product.metadata?.[ctx.config.metadata.productIdField] || 'N/A'}`
+      );
+
+      if (showAll) {
+        console.log(
+          `  Managed: ${isManaged ? chalk.green('Yes') : chalk.yellow('No')}`
+        );
+      }
+
+      console.log('');
+    }
+  } catch (error) {
+    ctx.logger.error('Error listing products:', error);
+    throw error;
+  }
+}
+
+// ------------------ COMMAND ------------------
+
+const products = new Command()
+  .name('products')
+  .description('List Polar products')
+  .addOption(
+    new Option('-e, --env <environment>', 'Target environment').choices(
+      ENV_CHOICES
+    )
+  )
+  .option('--all', 'Show all items in Polar account')
+  .action(async (options: ListProductsOptions, command) => {
+    try {
+      const { ctx, showAll, organizationId } = await runListProductsPreflight(
+        options,
+        command
+      );
+      await listPolarProductsAction(ctx, { showAll, organizationId });
+      console.log(chalk.green('\nOperation completed successfully.'));
+    } catch (error) {
+      console.error(chalk.red(`\nOperation failed: ${error}`));
+      process.exit(1);
+    }
+  });
+
 // ========================================================================
-// ACTION
+// PRICES
 // ========================================================================
+
+// ------------------ TYPES ------------------
+
+interface ListPricesOptions {
+  env?: EnvironmentKey;
+  all?: boolean;
+}
+
+interface ListPricesPreflightResult {
+  ctx: Context;
+  showAll: boolean;
+  chosenEnv: EnvironmentKey;
+  organizationId: string;
+}
+
+// ------------------ PREFLIGHT ------------------
+
+async function runListPricesPreflight(
+  options: ListPricesOptions,
+  command: CommandType
+): Promise<ListPricesPreflightResult> {
+  const globalOptions = command.parent?.opts() || {};
+  const configPath = globalOptions.config;
+
+  const chosenEnv = await determineEnvironment({ envInput: options.env });
+  loadEnvironment(chosenEnv);
+
+  const config = await loadConfig({ configPath });
+  const ctx = createContext({
+    adapter: Object.values(config.adapters)[0] as DatabaseAdapter,
+    config,
+  });
+
+  const organizationId = ctx.config.env.organizationId;
+  if (!organizationId) {
+    throw new Error('organizationId is required in config.env');
+  }
+
+  return {
+    ctx,
+    showAll: !!options.all,
+    chosenEnv,
+    organizationId,
+  };
+}
+
+// ------------------ ACTION ------------------
 
 async function listPolarPricesAction(
   ctx: Context,
@@ -132,11 +249,9 @@ async function listPolarPricesAction(
   }
 }
 
-// ========================================================================
-// COMMAND
-// ========================================================================
+// ------------------ COMMAND ------------------
 
-export const prices = new Command()
+const prices = new Command()
   .name('prices')
   .description('List Polar prices')
   .addOption(
@@ -147,18 +262,28 @@ export const prices = new Command()
   .option('--all', 'Show all items in Polar account')
   .action(async (options: ListPricesOptions, command) => {
     try {
-      // Run preflight checks and setup
       const { ctx, showAll, organizationId } = await runListPricesPreflight(
         options,
         command
       );
-
-      // Execute the action
       await listPolarPricesAction(ctx, { showAll, organizationId });
-
       console.log(chalk.green('\nOperation completed successfully.'));
     } catch (error) {
       console.error(chalk.red(`\nOperation failed: ${error}`));
       process.exit(1);
     }
+  });
+
+// ========================================================================
+// PARENT COMMAND
+// ========================================================================
+
+export const list = new Command()
+  .name('list')
+  .description('List Polar resources')
+  .addCommand(products)
+  .addCommand(prices)
+  .action(() => {
+    list.help();
+    process.exit(0);
   });

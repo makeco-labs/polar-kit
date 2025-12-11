@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { cli, getTestOrganizationId, getTestPolarToken } from '../helpers';
+import { cli, getTestOrganizationId, getTestPolarToken } from '../test-utils/helpers';
 
 // ========================================================================
 // PRODUCTS TESTS

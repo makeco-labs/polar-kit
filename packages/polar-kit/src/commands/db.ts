@@ -17,8 +17,10 @@ import {
 } from '@/utils';
 
 // ========================================================================
-// TYPES
+// SYNC
 // ========================================================================
+
+// ------------------ TYPES ------------------
 
 interface SyncOptions {
   env?: EnvironmentKey;
@@ -31,44 +33,33 @@ interface SyncPreflightResult {
   organizationId: string;
 }
 
-// ========================================================================
-// PREFLIGHT
-// ========================================================================
+// ------------------ PREFLIGHT ------------------
 
 async function runSyncPreflight(
   options: SyncOptions,
   command: CommandType
 ): Promise<SyncPreflightResult> {
-  // Get global config option from parent command
   const globalOptions = command.parent?.opts() || {};
   const configPath = globalOptions.config;
 
-  // Determine environment
   const chosenEnv = await determineEnvironment({ envInput: options.env });
-
-  // Load environment variables
   loadEnvironment(chosenEnv);
 
-  // Load configuration
   const config = await loadConfig({ configPath });
 
-  // Determine adapter (auto-select if only one)
   const adapterResult = await determineAdapter({
     adapterInput: options.adapter,
     availableAdapters: config.adapters,
   });
 
-  // Create context
   const ctx = createContext({ adapter: adapterResult.adapter, config });
 
-  // Verify Polar client is available
   if (!ctx.polarClient) {
     throw new Error(
       'Polar client not available. Check POLAR_ACCESS_TOKEN environment variable.'
     );
   }
 
-  // Verify adapter has required methods
   if (
     !(
       typeof ctx.adapter.syncProducts === 'function' &&
@@ -80,18 +71,15 @@ async function runSyncPreflight(
     );
   }
 
-  // Verify Polar access token is configured
   if (!ctx.config.env.polarAccessToken) {
     throw new Error('POLAR_ACCESS_TOKEN is not configured in environment');
   }
 
-  // Get organization ID
   const organizationId = ctx.config.env.organizationId;
   if (!organizationId) {
     throw new Error('organizationId is required in config.env');
   }
 
-  // Production confirmation
   await requireProductionConfirmation({
     action: 'sync Polar plans to database',
     env: chosenEnv,
@@ -104,9 +92,7 @@ async function runSyncPreflight(
   };
 }
 
-// ========================================================================
-// ACTION
-// ========================================================================
+// ------------------ ACTION ------------------
 
 async function syncPolarSubscriptionPlansAction(
   ctx: Context,
@@ -116,7 +102,6 @@ async function syncPolarSubscriptionPlansAction(
   ctx.logger.info('Syncing Polar subscription plans to database...');
 
   try {
-    // Fetch managed products from Polar (only those managed by this tool)
     ctx.logger.info('Fetching managed products from Polar...');
     const polarProducts = await listPolarProducts(ctx, {
       showAll: false,
@@ -124,7 +109,6 @@ async function syncPolarSubscriptionPlansAction(
     });
     ctx.logger.info(`Found ${polarProducts.length} managed products in Polar`);
 
-    // Fetch managed prices from Polar (only those managed by this tool)
     ctx.logger.info('Fetching managed prices from Polar...');
     const polarPrices = await listPolarPrices(ctx, {
       showAll: false,
@@ -132,12 +116,10 @@ async function syncPolarSubscriptionPlansAction(
     });
     ctx.logger.info(`Found ${polarPrices.length} managed prices in Polar`);
 
-    // Sync products to database
     ctx.logger.info('Syncing products to database...');
     await ctx.adapter.syncProducts(polarProducts);
     ctx.logger.info('Products synced successfully');
 
-    // Sync prices to database
     ctx.logger.info('Syncing prices to database...');
     await ctx.adapter.syncPrices(polarPrices);
     ctx.logger.info('Prices synced successfully');
@@ -154,11 +136,9 @@ async function syncPolarSubscriptionPlansAction(
   }
 }
 
-// ========================================================================
-// COMMAND
-// ========================================================================
+// ------------------ COMMAND ------------------
 
-export const sync = new Command()
+const sync = new Command()
   .name('sync')
   .description('Sync Polar subscription plans to database')
   .addOption(
@@ -169,18 +149,129 @@ export const sync = new Command()
   .option('-a, --adapter <name>', 'Database adapter name')
   .action(async (options: SyncOptions, command) => {
     try {
-      // Run preflight checks and setup
       const { ctx, organizationId } = await runSyncPreflight(options, command);
-
-      // Execute the action
       await syncPolarSubscriptionPlansAction(ctx, { organizationId });
-
       console.log(chalk.green('\nOperation completed successfully.'));
-
-      // Ensure process exits
       process.exit(0);
     } catch (error) {
       console.error(chalk.red(`\nOperation failed: ${error}`));
       process.exit(1);
     }
+  });
+
+// ========================================================================
+// PURGE
+// ========================================================================
+
+// ------------------ TYPES ------------------
+
+interface PurgeDbOptions {
+  env?: EnvironmentKey;
+  adapter?: string;
+}
+
+interface PurgeDbPreflightResult {
+  ctx: Context;
+  chosenEnv: EnvironmentKey;
+}
+
+// ------------------ PREFLIGHT ------------------
+
+async function runPurgeDbPreflight(
+  options: PurgeDbOptions,
+  command: CommandType
+): Promise<PurgeDbPreflightResult> {
+  const globalOptions = command.parent?.opts() || {};
+  const configPath = globalOptions.config;
+
+  const chosenEnv = await determineEnvironment({ envInput: options.env });
+  loadEnvironment(chosenEnv);
+
+  const config = await loadConfig({ configPath });
+
+  const adapterResult = await determineAdapter({
+    adapterInput: options.adapter,
+    availableAdapters: config.adapters,
+  });
+
+  const ctx = createContext({ adapter: adapterResult.adapter, config });
+
+  if (
+    !(
+      typeof ctx.adapter.clearProducts === 'function' &&
+      typeof ctx.adapter.clearPrices === 'function'
+    )
+  ) {
+    throw new Error(
+      'Database adapter must implement clearProducts and clearPrices methods'
+    );
+  }
+
+  await requireProductionConfirmation({
+    action: 'purge database plans',
+    env: chosenEnv,
+  });
+
+  return {
+    ctx,
+    chosenEnv,
+  };
+}
+
+// ------------------ ACTION ------------------
+
+async function purgeDbAction(ctx: Context): Promise<void> {
+  ctx.logger.info('Clearing subscription plans from database...');
+
+  try {
+    ctx.logger.info('Clearing prices from database...');
+    await ctx.adapter.clearPrices();
+    ctx.logger.info('Prices cleared successfully');
+
+    ctx.logger.info('Clearing products from database...');
+    await ctx.adapter.clearProducts();
+    ctx.logger.info('Products cleared successfully');
+
+    ctx.logger.info('All subscription plans cleared from database');
+  } catch (error) {
+    ctx.logger.error('Error clearing subscription plans from database:', error);
+    throw error;
+  }
+}
+
+// ------------------ COMMAND ------------------
+
+const purge = new Command()
+  .name('purge')
+  .description('Delete subscription plans from database')
+  .addOption(
+    new Option('-e, --env <environment>', 'Target environment').choices(
+      ENV_CHOICES
+    )
+  )
+  .option('-a, --adapter <name>', 'Database adapter name')
+  .action(async (options: PurgeDbOptions, command) => {
+    try {
+      const { ctx } = await runPurgeDbPreflight(options, command);
+      await purgeDbAction(ctx);
+      console.log(chalk.green('\nOperation completed successfully.'));
+      process.exit(0);
+    } catch (error) {
+      console.error(chalk.red(`\nOperation failed: ${error}`));
+      process.exit(1);
+    }
+  });
+
+// ========================================================================
+// PARENT COMMAND
+// ========================================================================
+
+export const db = new Command()
+  .name('db')
+  .description('Database operations')
+  .addCommand(sync)
+  .addCommand(purge)
+  .action(() => {
+    db.help();
+    process.exit(0);
   });

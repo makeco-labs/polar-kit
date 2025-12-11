@@ -32,7 +32,7 @@ export class CLIRunner {
 
   constructor() {
     // Path to the built CLI
-    this.cliPath = join(__dirname, '../../dist/cli.js');
+    this.cliPath = join(__dirname, '../../../dist/cli.js');
 
     // Default test environment variables from .env.test
     this.defaultEnv = {
@@ -169,7 +169,7 @@ export class CLIRunner {
   sync(
     options: { env?: string; adapter?: string; config?: string } = {}
   ): CLIResult {
-    const args = ['sync'];
+    const args = ['db', 'sync'];
     if (options.env) {
       args.push('-e', options.env);
     }

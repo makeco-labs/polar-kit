@@ -9,7 +9,7 @@ import {
   getTestOrganizationId,
   getTestPolarToken,
   products,
-} from '../helpers';
+} from '../test-utils/helpers';
 
 // ========================================================================
 // SYNC TESTS
