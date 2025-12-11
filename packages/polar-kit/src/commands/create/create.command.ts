@@ -17,7 +17,10 @@ export const create = new Command()
   .action(async (options: CreateOptions, command) => {
     try {
       // Run preflight checks and setup
-      const { ctx, plans, organizationId } = await runCreatePreflight(options, command);
+      const { ctx, plans, organizationId } = await runCreatePreflight(
+        options,
+        command
+      );
 
       // Execute the action
       await ensurePolarSubscriptionPlans(ctx, { plans, organizationId });

@@ -20,6 +20,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["./src/**/*.ts", "./stripe.config.ts"],
+  "include": ["./src/**/*.ts", "./polar.config.ts"],
   "exclude": ["dist", "build", "node_modules"]
 }

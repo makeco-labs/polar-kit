@@ -1,10 +1,10 @@
 {
   "name": "@demo/postgres",
   "version": "1.0.0",
-  "description": "Example project using stripe-kit",
+  "description": "Example project using polar-kit",
   "type": "module",
   "scripts": {
-    "stripe": "bunx @makeco/stripe-kit -c stripe.config.ts",
+    "polar": "bunx @makeco/polar-kit -c polar.config.ts",
     "db": "bunx @makeco/db-cli -c db.config.ts"
   },
   "dependencies": {

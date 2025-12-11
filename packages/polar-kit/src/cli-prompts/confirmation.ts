@@ -19,12 +19,12 @@ export async function requireProductionConfirmation(input: {
 
   console.log(
     chalk.red.bold(
-      `\nWARNING: You are about to perform a ${action.toUpperCase()} operation on PRODUCTION Stripe!`
+      `\nWARNING: You are about to perform a ${action.toUpperCase()} operation on PRODUCTION Polar!`
     )
   );
   console.log(
     chalk.yellow(
-      'This operation may affect the production Stripe configuration.'
+      'This operation may affect the production Polar configuration.'
     )
   );
 
@@ -33,7 +33,7 @@ export async function requireProductionConfirmation(input: {
       type: 'confirm',
       name: 'value',
       message: chalk.red(
-        `Are you absolutely sure you want to ${action} in PRODUCTION Stripe?`
+        `Are you absolutely sure you want to ${action} in PRODUCTION Polar?`
       ),
       initial: false,
     });

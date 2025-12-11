@@ -1,6 +1,6 @@
-# Stripe Sync PostgreSQL Demo
+# Polar Sync PostgreSQL Demo
 
-This demo shows how to use `@makeco/stripe-kit` with PostgreSQL and Drizzle ORM to sync subscription plans between your application and Stripe.
+This demo shows how to use `@makeco/polar-kit` with PostgreSQL and Drizzle ORM to sync subscription plans between your application and Polar.
 
 ## Setup
 
@@ -12,8 +12,9 @@ This demo shows how to use `@makeco/stripe-kit` with PostgreSQL and Drizzle ORM 
 2. **Set up environment variables:**
    Create `.env.test` file:
    ```env
-   STRIPE_SECRET_KEY=sk_test_...
-   DATABASE_URL=postgresql://user:password@localhost:5432/stripe_sync_demo
+   POLAR_ACCESS_TOKEN=polar_at_...
+   POLAR_ORGANIZATION_ID=your_org_id
+   DATABASE_URL=postgresql://user:password@localhost:5432/polar_sync_demo
    ```
 
 3. **Set up database:**
@@ -30,47 +31,46 @@ This demo shows how to use `@makeco/stripe-kit` with PostgreSQL and Drizzle ORM 
 
 ## Usage
 
-### Create Stripe Products & Prices
+### Create Polar Products & Prices
 ```bash
-bun run stripe create
+bun run polar create
 ```
 
-### List Stripe Items
+### List Polar Items
 ```bash
 # List managed products only
-bun run stripe list products
+bun run polar list products
 
-# List all products in Stripe account
-bun run stripe list products --all
+# List all products in Polar account
+bun run polar list products --all
 
 # List managed prices only
-bun run stripe list prices
+bun run polar list prices
 
-# List all prices in Stripe account
-bun run stripe list prices --all
+# List all prices in Polar account
+bun run polar list prices --all
 ```
 
 ### Sync to Database
 ```bash
-bun run stripe db sync
+bun run polar db sync
 ```
 
 ### Archive Plans
 ```bash
-bun run stripe archive
+bun run polar archive
 ```
 
 ## Configuration
 
-The `stripe.config.ts` file demonstrates:
+The `polar.config.ts` file demonstrates:
 
-- ✅ **New schema structure** with `product` and `prices` separation
-- ✅ **Marketing features** for Stripe pricing tables
-- ✅ **Feature configuration** stored in metadata for app logic
-- ✅ **Multiple pricing tiers** (Free, Pro, Enterprise)
-- ✅ **Monthly and yearly pricing** with promotional discounts
-- ✅ **Database adapter** using Drizzle ORM
-- ✅ **Environment configuration** for different stages
+- **New schema structure** with `product` and `prices` separation
+- **Feature configuration** stored in metadata for app logic
+- **Multiple pricing tiers** (Free, Pro, Enterprise)
+- **Monthly and yearly pricing** with promotional discounts
+- **Database adapter** using Drizzle ORM
+- **Environment configuration** for different stages
 
 ## Database Schema
 

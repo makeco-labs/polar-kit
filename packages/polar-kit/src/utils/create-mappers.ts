@@ -29,7 +29,7 @@ export function createMappers(config: Config): PolarMappers {
 
     mapSubscriptionPlanToPolarPrice: (
       price: PolarPrice,
-      context: PolarPriceContext
+      _context: PolarPriceContext
     ): PolarPriceCreateInput => {
       // Handle different price types
       if (price.amountType === 'free') {
@@ -39,12 +39,11 @@ export function createMappers(config: Config): PolarMappers {
             amountType: 'free',
             recurringInterval: price.recurringInterval || 'month',
           };
-        } else {
-          return {
-            type: 'one_time',
-            amountType: 'free',
-          };
         }
+        return {
+          type: 'one_time',
+          amountType: 'free',
+        };
       }
 
       // Fixed price
@@ -56,14 +55,13 @@ export function createMappers(config: Config): PolarMappers {
           priceAmount: price.priceAmount || 0,
           priceCurrency: price.priceCurrency || 'usd',
         };
-      } else {
-        return {
-          type: 'one_time',
-          amountType: 'fixed',
-          priceAmount: price.priceAmount || 0,
-          priceCurrency: price.priceCurrency || 'usd',
-        };
       }
+      return {
+        type: 'one_time',
+        amountType: 'fixed',
+        priceAmount: price.priceAmount || 0,
+        priceCurrency: price.priceCurrency || 'usd',
+      };
     },
   };
 }

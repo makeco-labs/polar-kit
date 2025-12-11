@@ -2,16 +2,16 @@ import { eq } from 'drizzle-orm';
 import { db } from './db-connection';
 import { prices, products } from './db-schema';
 
-import type { DatabaseAdapter } from '@makeco/stripe-kit';
+import type { DatabaseAdapter } from '@makeco/polar-kit';
 
 /**
  * PostgreSQL database adapter using Drizzle ORM
- * This demonstrates how to sync Stripe data to your database
+ * This demonstrates how to sync Polar data to your database
  */
 export const postgresAdapter: DatabaseAdapter = {
-  async syncProducts(stripeProducts) {
-    for (const stripeProduct of stripeProducts) {
-      const internalId = stripeProduct.metadata?.internal_product_id;
+  async syncProducts(polarProducts) {
+    for (const polarProduct of polarProducts) {
+      const internalId = polarProduct.metadata?.internal_product_id;
       if (!internalId) {
         continue;
       }
@@ -20,21 +20,19 @@ export const postgresAdapter: DatabaseAdapter = {
       const existing = await db
         .select()
         .from(products)
-        .where(eq(products.id, internalId))
+        .where(eq(products.id, String(internalId)))
         .limit(1);
 
       const productData = {
-        id: internalId,
-        stripeId: stripeProduct.id,
-        name: stripeProduct.name,
-        description: stripeProduct.description || null,
-        active: stripeProduct.active ?? true,
-        type: stripeProduct.type || 'service',
-        features: stripeProduct.metadata?.features
-          ? JSON.parse(stripeProduct.metadata.features)
-          : null,
-        marketingFeatures: stripeProduct.marketing_features || null,
-        metadata: stripeProduct.metadata || null,
+        id: String(internalId),
+        polarId: polarProduct.id,
+        name: polarProduct.name,
+        description: polarProduct.description || null,
+        active: !polarProduct.isArchived,
+        type: 'service',
+        features: null,
+        marketingFeatures: null,
+        metadata: polarProduct.metadata || null,
         updatedAt: new Date(),
       };
 
@@ -43,7 +41,7 @@ export const postgresAdapter: DatabaseAdapter = {
         await db
           .update(products)
           .set(productData)
-          .where(eq(products.id, internalId));
+          .where(eq(products.id, String(internalId)));
       } else {
         // Insert new product
         await db.insert(products).values({
@@ -54,10 +52,10 @@ export const postgresAdapter: DatabaseAdapter = {
     }
   },
 
-  async syncPrices(stripePrices) {
-    for (const stripePrice of stripePrices) {
-      const internalId = stripePrice.metadata?.internal_price_id;
-      const internalProductId = stripePrice.metadata?.internal_product_id;
+  async syncPrices(polarPrices) {
+    for (const polarPrice of polarPrices) {
+      const internalId = polarPrice.metadata?.internal_price_id;
+      const internalProductId = polarPrice.metadata?.internal_product_id;
 
       if (!(internalId || internalProductId)) {
         continue;
@@ -67,30 +65,27 @@ export const postgresAdapter: DatabaseAdapter = {
       const existing = await db
         .select()
         .from(prices)
-        .where(eq(prices.id, internalId))
+        .where(eq(prices.id, String(internalId)))
         .limit(1);
 
       const priceData = {
-        id: internalId,
-        stripeId: stripePrice.id,
-        productId: internalProductId,
-        stripeProductId:
-          typeof stripePrice.product === 'string'
-            ? stripePrice.product
-            : stripePrice.product?.id,
-        currency: stripePrice.currency,
-        unitAmount: stripePrice.unit_amount || null,
-        interval: stripePrice.recurring?.interval || null,
-        intervalCount: stripePrice.recurring?.interval_count || 1,
-        nickname: stripePrice.nickname || null,
-        active: stripePrice.active ?? true,
-        metadata: stripePrice.metadata || null,
+        id: String(internalId),
+        polarId: polarPrice.id,
+        productId: internalProductId ? String(internalProductId) : null,
+        polarProductId: polarPrice.productId,
+        currency: polarPrice.priceCurrency || 'usd',
+        unitAmount: polarPrice.priceAmount || null,
+        interval: polarPrice.recurringInterval || null,
+        intervalCount: 1,
+        nickname: null,
+        active: !polarPrice.isArchived,
+        metadata: polarPrice.metadata || null,
         updatedAt: new Date(),
       };
 
       if (existing.length > 0) {
         // Update existing price
-        await db.update(prices).set(priceData).where(eq(prices.id, internalId));
+        await db.update(prices).set(priceData).where(eq(prices.id, String(internalId)));
       } else {
         // Insert new price
         await db.insert(prices).values({

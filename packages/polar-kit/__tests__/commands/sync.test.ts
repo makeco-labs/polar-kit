@@ -4,8 +4,8 @@ import {
   cli,
   createSQLiteAdapter,
   createTestDatabase,
-  getTestPolarToken,
   getTestOrganizationId,
+  getTestPolarToken,
   products,
 } from '../helpers';
 

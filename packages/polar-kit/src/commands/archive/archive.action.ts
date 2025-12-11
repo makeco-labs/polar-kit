@@ -70,11 +70,12 @@ async function archivePolarPrices(
   }
 
   const prices = await listPolarPrices(ctx, { showAll: false, organizationId });
-  const pricesToArchive = prices.filter((price) =>
-    'metadata' in price &&
-    internalProductIds.includes(
-      String(price.metadata?.[ctx.config.metadata.productIdField] ?? '')
-    )
+  const pricesToArchive = prices.filter(
+    (price) =>
+      'metadata' in price &&
+      internalProductIds.includes(
+        String(price.metadata?.[ctx.config.metadata.productIdField] ?? '')
+      )
   );
 
   if (pricesToArchive.length === 0) {
@@ -84,7 +85,9 @@ async function archivePolarPrices(
 
   // Note: In Polar, prices are typically archived with their product
   // Individual price archival may not be supported directly
-  ctx.logger.info(`Found ${pricesToArchive.length} prices associated with products to archive`);
+  ctx.logger.info(
+    `Found ${pricesToArchive.length} prices associated with products to archive`
+  );
 }
 
 // ------------------ ARCHIVE POLAR SUBSCRIPTION PLANS ------------------

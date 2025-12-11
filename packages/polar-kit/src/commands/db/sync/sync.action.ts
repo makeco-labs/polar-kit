@@ -18,9 +18,7 @@ export async function syncPolarSubscriptionPlansAction(
       showAll: false,
       organizationId,
     });
-    ctx.logger.info(
-      `Found ${polarProducts.length} managed products in Polar`
-    );
+    ctx.logger.info(`Found ${polarProducts.length} managed products in Polar`);
 
     // Fetch managed prices from Polar (only those managed by this tool)
     ctx.logger.info('Fetching managed prices from Polar...');

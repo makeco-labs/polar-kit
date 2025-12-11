@@ -17,7 +17,10 @@ export const update = new Command()
   .action(async (options: UpdateOptions, command) => {
     try {
       // Run preflight checks and setup
-      const { ctx, organizationId } = await runUpdatePreflight(options, command);
+      const { ctx, organizationId } = await runUpdatePreflight(
+        options,
+        command
+      );
 
       // Execute the action
       await updatePolarSubscriptionPlansAction(ctx, { organizationId });

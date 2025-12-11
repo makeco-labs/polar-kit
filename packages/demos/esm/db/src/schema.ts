@@ -7,10 +7,10 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
-// Products table - mirrors the Stripe product structure
+// Products table - mirrors the Polar product structure
 export const products = pgTable('products', {
   id: text('id').primaryKey(), // Internal product ID
-  stripeId: text('stripe_id').unique(), // Stripe product ID
+  polarId: text('polar_id').unique(), // Polar product ID
   name: text('name').notNull(),
   description: text('description'),
   active: boolean('active').default(true),
@@ -22,12 +22,12 @@ export const products = pgTable('products', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Prices table - mirrors the Stripe price structure
+// Prices table - mirrors the Polar price structure
 export const prices = pgTable('prices', {
   id: text('id').primaryKey(), // Internal price ID
-  stripeId: text('stripe_id').unique(), // Stripe price ID
+  polarId: text('polar_id').unique(), // Polar price ID
   productId: text('product_id').references(() => products.id),
-  stripeProductId: text('stripe_product_id'),
+  polarProductId: text('polar_product_id'),
   currency: text('currency').notNull(),
   unitAmount: integer('unit_amount'), // Amount in cents
   interval: text('interval'), // month, year, etc

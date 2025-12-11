@@ -33,7 +33,7 @@ jobs:
       #   run: bun run lint
 
       - name: Build package
-        working-directory: packages/stripe-kit
+        working-directory: packages/polar-kit
         run: bun run build
 
       - name: Setup Node.js for npm publish
@@ -43,7 +43,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
-        working-directory: packages/stripe-kit
+        working-directory: packages/polar-kit
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

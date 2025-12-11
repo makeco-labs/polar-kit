@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@makeco/stripe-kit-monorepo",
+      "name": "@makeco/polar-kit-monorepo",
       "devDependencies": {
         "@biomejs/biome": "2.1.2",
         "turbo": "^2.5.5",
@@ -30,8 +30,10 @@
       "version": "1.0.0",
       "dependencies": {
         "@demo/esm-db": "workspace:*",
+        "@makeco/polar-kit": "workspace:*",
       },
       "devDependencies": {
+        "@types/node": "^20.0.0",
         "typescript": "^5.0.0",
       },
     },

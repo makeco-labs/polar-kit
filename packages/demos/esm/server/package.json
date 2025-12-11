@@ -1,16 +1,18 @@
 {
 	"name": "@demo/esm-server",
 	"version": "1.0.0",
-	"description": "ESM server package for testing stripe-kit config loading",
+	"description": "ESM server package for testing polar-kit config loading",
 	"type": "module",
 	"scripts": {
 		"build": "tsc",
-		"stripe": "bunx @makeco/stripe-kit -c stripe.config.ts"
+		"polar": "bunx @makeco/polar-kit -c polar.config.ts"
 	},
 	"dependencies": {
-		"@demo/esm-db": "workspace:*"
+		"@demo/esm-db": "workspace:*",
+		"@makeco/polar-kit": "workspace:*"
 	},
 	"devDependencies": {
+		"@types/node": "^20.0.0",
 		"typescript": "^5.0.0"
 	}
 }

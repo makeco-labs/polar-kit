@@ -1,4 +1,9 @@
-import type { Context, PolarPrice, PolarProduct, SubscriptionPlan } from '@/definitions';
+import type {
+  Context,
+  PolarPrice,
+  PolarProduct,
+  SubscriptionPlan,
+} from '@/definitions';
 import { listPolarPrices, listPolarProducts } from '@/utils';
 
 // ========================================================================
@@ -61,11 +66,11 @@ async function updatePolarProduct(
  * Updates all prices for a subscription plan
  * Note: In Polar, price updates may be limited. This function handles what's possible.
  */
-async function updatePolarPrices(
+function updatePolarPrices(
   ctx: Context,
   plan: SubscriptionPlan,
   allPolarPrices: PolarPrice[]
-): Promise<void> {
+): void {
   try {
     // For each price in the plan
     for (const planPrice of plan.prices) {

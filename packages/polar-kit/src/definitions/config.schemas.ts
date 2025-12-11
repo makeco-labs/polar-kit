@@ -2,15 +2,14 @@ import { z } from 'zod';
 
 import type { DatabaseAdapter } from './database-adapter.schemas';
 import { databaseAdapterSchema } from './database-adapter.schemas';
+import type { PolarPrice } from './polar-price.schemas';
 import { polarPriceSchema } from './polar-price.schemas';
 import {
-  polarProductSchema,
   type PolarPriceCreateInput,
   type PolarProductCreateInput,
+  polarProductSchema,
 } from './polar-product.schemas';
 import type { Prettify } from './utility.types';
-
-import type { PolarPrice } from './polar-price.schemas';
 
 // ========================================================================
 // SUBSCRIPTION PLAN SCHEMA (COMBINES PRODUCT + PRICES)

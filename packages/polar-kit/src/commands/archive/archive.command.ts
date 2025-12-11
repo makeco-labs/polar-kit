@@ -17,10 +17,8 @@ export const archive = new Command()
   .action(async (options: ArchiveOptions, command) => {
     try {
       // Run preflight checks and setup
-      const { ctx, productIdsToArchive, organizationId } = await runArchivePreflight(
-        options,
-        command
-      );
+      const { ctx, productIdsToArchive, organizationId } =
+        await runArchivePreflight(options, command);
 
       // Execute the action
       await archivePolarSubscriptionPlans(ctx, {

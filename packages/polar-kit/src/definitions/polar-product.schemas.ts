@@ -62,9 +62,9 @@ export interface PolarProductCreateInput {
   recurringInterval?: 'month' | 'year';
   description?: string;
   metadata?: Record<string, string | number | boolean>;
-  prices?: Array<PolarPriceCreateInput>;
+  prices?: PolarPriceCreateInput[];
   medias?: string[];
-  attachedCustomFields?: Array<{ customFieldId: string; required: boolean }>;
+  attachedCustomFields?: { customFieldId: string; required: boolean }[];
 }
 
 export interface PolarPriceCreateInput {

@@ -34,7 +34,7 @@ export async function findPolarProduct(
   const { internalProductId, organizationId } = input;
   const { metadata } = ctx.config;
 
-  // Polar doesn't have a search API like Stripe, so we list and filter
+  // Polar doesn't have a search API, so we list and filter
   const response = await ctx.polarClient.products.list({
     organizationId,
   });
@@ -55,7 +55,8 @@ export async function findPolarProduct(
         isRecurring: product.isRecurring,
         isArchived: product.isArchived,
         organizationId: product.organizationId,
-        recurringInterval: (product.recurringInterval as 'month' | 'year') ?? undefined,
+        recurringInterval:
+          (product.recurringInterval as 'month' | 'year') ?? undefined,
         metadata: product.metadata as Record<string, string | number | boolean>,
       };
     }
@@ -146,7 +147,8 @@ export async function listPolarProducts(
         isRecurring: product.isRecurring,
         isArchived: product.isArchived,
         organizationId: product.organizationId,
-        recurringInterval: (product.recurringInterval as 'month' | 'year') ?? undefined,
+        recurringInterval:
+          (product.recurringInterval as 'month' | 'year') ?? undefined,
         metadata: product.metadata as Record<string, string | number | boolean>,
       });
     }
@@ -176,7 +178,9 @@ export async function listPolarPrices(
   const items = (response as unknown as { items: SDKProduct[] }).items || [];
 
   for (const product of items) {
-    if (!product.prices) continue;
+    if (!product.prices) {
+      continue;
+    }
 
     for (const p of product.prices) {
       const isManaged =

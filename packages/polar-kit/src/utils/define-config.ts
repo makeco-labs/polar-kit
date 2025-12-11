@@ -2,7 +2,7 @@ import type { Config } from '@/definitions';
 import { configSchema } from '@/definitions';
 
 /**
- * Defines a type-safe Stripe Sync configuration object
+ * Defines a type-safe Polar Sync configuration object
  * @param config - The configuration object
  * @returns The validated configuration
  */

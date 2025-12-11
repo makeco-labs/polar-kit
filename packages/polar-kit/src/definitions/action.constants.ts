@@ -34,13 +34,13 @@ export type ActionKey = (typeof ACTIONS)[keyof typeof ACTIONS];
  * Descriptions for each action used in CLI prompts
  */
 export const ACTION_DESCRIPTIONS: Record<ActionKey, string> = {
-  [ACTIONS.CREATE]: '[create]: Create Stripe subscription plans (Idempotent)',
-  [ACTIONS.ARCHIVE]: '[archive]: Archive Stripe subscription plans',
-  [ACTIONS.SYNC]: '[sync]: Sync Stripe subscription plans to database',
-  [ACTIONS.UPDATE]: '[update]: Update Stripe subscription plans',
+  [ACTIONS.CREATE]: '[create]: Create Polar subscription plans (Idempotent)',
+  [ACTIONS.ARCHIVE]: '[archive]: Archive Polar subscription plans',
+  [ACTIONS.SYNC]: '[sync]: Sync Polar subscription plans to database',
+  [ACTIONS.UPDATE]: '[update]: Update Polar subscription plans',
   [ACTIONS.CLEAR_DB_PLANS]:
     '[clear-db-plans]: Delete subscription plans from database',
-  [ACTIONS.URL]: '[url]: Show Stripe dashboard URL',
-  [ACTIONS.LIST_PRODUCTS]: '[list-products]: List Stripe products',
-  [ACTIONS.LIST_PRICES]: '[list-prices]: List Stripe prices',
+  [ACTIONS.URL]: '[url]: Show Polar dashboard URL',
+  [ACTIONS.LIST_PRODUCTS]: '[list-products]: List Polar products',
+  [ACTIONS.LIST_PRICES]: '[list-prices]: List Polar prices',
 } as const;
