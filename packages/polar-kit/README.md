@@ -95,6 +95,45 @@ export default defineConfig({
 });
 ```
 
+## Contributing
+
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release) for automated versioning and publishing. Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) format.
+
+### Commit Format
+
+```
+<type>(<scope>): <description>
+```
+
+### Version Bumps
+
+| Commit Type | Version Bump | Example |
+|-------------|--------------|---------|
+| `fix:` | Patch (0.0.X) | `fix: resolve null pointer in CLI` |
+| `feat:` | Minor (0.X.0) | `feat: add export command` |
+| `feat!:` or `BREAKING CHANGE:` | Major (X.0.0) | `feat!: change API signature` |
+
+### Other Types (no release)
+
+- `chore:` - maintenance tasks
+- `docs:` - documentation changes
+- `refactor:` - code refactoring
+- `test:` - adding tests
+- `ci:` - CI/CD changes
+
+### Examples
+
+```bash
+# Patch release (0.1.0 → 0.1.1)
+git commit -m "fix: handle missing config file gracefully"
+
+# Minor release (0.1.1 → 0.2.0)
+git commit -m "feat: add JSON export format"
+
+# Major release (0.2.0 → 1.0.0)
+git commit -m "feat!: rename sync command to push"
+```
+
 ## License
 
 MIT © [makeco](https://github.com/makeco-labs)
