@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/makeco-labs/polar-kit/compare/v1.0.3...v1.1.0) (2025-12-12)
+
+
+### Features
+
+* Added server config prop to polar ([02db94b](https://github.com/makeco-labs/polar-kit/commit/02db94b6c4e051fec50217640c99383083c643e0))
+
 ## [1.0.3](https://github.com/makeco-labs/polar-kit/compare/v1.0.2...v1.0.3) (2025-12-11)
 
 
