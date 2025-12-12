@@ -62,6 +62,7 @@ export function createTestConfig(
     env: {
       polarAccessToken: getTestPolarToken(),
       organizationId: getTestOrganizationId(),
+      server: 'sandbox',
     },
 
     // SQLite adapter for testing

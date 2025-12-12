@@ -15,9 +15,10 @@ export function createContext(input: {
 
   const polarAccessToken = config.env.polarAccessToken;
 
-  const polarClient = createPolarClient({
-    POLAR_ACCESS_TOKEN: polarAccessToken,
-  });
+  const polarClient = createPolarClient(
+    { POLAR_ACCESS_TOKEN: polarAccessToken },
+    config.env.server
+  );
 
   return {
     logger,

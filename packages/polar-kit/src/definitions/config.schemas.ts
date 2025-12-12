@@ -14,6 +14,7 @@ export const configSchema = z.object({
   env: z.object({
     polarAccessToken: z.string(),
     organizationId: z.string().optional(),
+    server: z.enum(['sandbox', 'production']).optional().default('production'),
   }),
   adapters: z.record(z.string(), databaseAdapterSchema),
   productIds: z.record(z.string(), z.string()).optional(),
@@ -34,6 +35,13 @@ export const configSchema = z.object({
 
 export type Config = Prettify<
   Omit<z.infer<typeof configSchema>, 'adapters' | 'plans'> & {
+    adapters: Record<string, DatabaseAdapter>;
+    plans: ProductCreate[];
+  }
+>;
+
+export type ConfigInput = Prettify<
+  Omit<z.input<typeof configSchema>, 'adapters' | 'plans'> & {
     adapters: Record<string, DatabaseAdapter>;
     plans: ProductCreate[];
   }
