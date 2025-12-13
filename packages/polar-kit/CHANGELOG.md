@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/makeco-labs/polar-kit/compare/v1.1.2...v1.1.3) (2025-12-13)
+
+
+### Bug Fixes
+
+* Fixed sdk bug and passing organizationId ([e75c846](https://github.com/makeco-labs/polar-kit/commit/e75c8462bb7e0f2bb4a26d0f93bc4958aa032aa7))
+
 ## [1.1.2](https://github.com/makeco-labs/polar-kit/compare/v1.1.1...v1.1.2) (2025-12-13)
 
 
