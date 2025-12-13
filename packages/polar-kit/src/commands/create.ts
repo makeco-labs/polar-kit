@@ -13,6 +13,7 @@ import { ENV_CHOICES } from '@/definitions';
 import {
   createContext,
   findPolarProduct,
+  isOrganizationToken,
   loadConfig,
   loadEnvironment,
 } from '@/utils';
@@ -123,10 +124,12 @@ async function ensurePolarSubscriptionPlans(
         };
 
         // Create product directly using the plan
-        // Only include organizationId if provided (not needed for organization tokens)
+        // Organization tokens (polar_oat_) don't need/want organizationId
+        // Personal access tokens (polar_pat_) require organizationId
+        const isOrgToken = isOrganizationToken(ctx.config.env.polarAccessToken);
         const createdProduct = await ctx.polarClient.products.create({
           ...plan,
-          ...(organizationId && { organizationId }),
+          ...(!isOrgToken && organizationId && { organizationId }),
           metadata,
         });
 

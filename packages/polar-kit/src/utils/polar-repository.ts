@@ -2,6 +2,7 @@ import type { Product } from '@polar-sh/sdk/models/components/product';
 import type { ProductPrice } from '@polar-sh/sdk/models/components/productprice';
 
 import type { Context } from '@/definitions';
+import { isOrganizationToken } from './polar-client';
 
 // ========================================================================
 // FIND OPERATIONS (PRECISE SEARCH)
@@ -15,10 +16,11 @@ export async function findPolarProduct(
   const { internalProductId, organizationId } = input;
   const { metadata } = ctx.config;
 
-  // Polar doesn't have a search API, so we list and filter
-  // Only include organizationId if provided (not needed for organization tokens)
+  // Organization tokens don't need/want organizationId - it's inferred from the token
+  // Personal access tokens require organizationId to specify which org to use
+  const isOrgToken = isOrganizationToken(ctx.config.env.polarAccessToken);
   const response = await ctx.polarClient.products.list({
-    ...(organizationId && { organizationId }),
+    ...(!isOrgToken && organizationId && { organizationId }),
   });
 
   // Access items from the response
@@ -86,9 +88,10 @@ export async function listPolarProducts(
 
   const allPolarProducts: Product[] = [];
 
-  // Only include organizationId if provided (not needed for organization tokens)
+  // Organization tokens don't need/want organizationId - it's inferred from the token
+  const isOrgToken = isOrganizationToken(ctx.config.env.polarAccessToken);
   const response = await ctx.polarClient.products.list({
-    ...(organizationId && { organizationId }),
+    ...(!isOrgToken && organizationId && { organizationId }),
   });
 
   // Access items from the response
@@ -121,9 +124,10 @@ export async function listPolarPrices(
   const allPolarPrices: ProductPrice[] = [];
 
   // Get all products first, then extract prices
-  // Only include organizationId if provided (not needed for organization tokens)
+  // Organization tokens don't need/want organizationId - it's inferred from the token
+  const isOrgToken = isOrganizationToken(ctx.config.env.polarAccessToken);
   const response = await ctx.polarClient.products.list({
-    ...(organizationId && { organizationId }),
+    ...(!isOrgToken && organizationId && { organizationId }),
   });
 
   // Access items from the response
