@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/makeco-labs/polar-kit/compare/v1.1.0...v1.1.1) (2025-12-13)
+
+
+### Bug Fixes
+
+* Removed organizationId when using org access token ([a040d34](https://github.com/makeco-labs/polar-kit/commit/a040d3462044db7449a8336ba22bdc148b54e0f0))
+
 # [1.1.0](https://github.com/makeco-labs/polar-kit/compare/v1.0.3...v1.1.0) (2025-12-12)
 
 
