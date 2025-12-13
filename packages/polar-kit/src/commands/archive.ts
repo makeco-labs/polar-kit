@@ -29,7 +29,7 @@ interface ArchivePreflightResult {
   ctx: Context;
   productIdsToArchive: string[];
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ========================================================================
@@ -62,11 +62,8 @@ async function runArchivePreflight(
   // Create context
   const ctx = createContext({ adapter: adapterResult.adapter, config });
 
-  // Get organization ID
+  // Get organization ID (optional - not needed for organization tokens)
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   // Production confirmation
   await requireProductionConfirmation({
@@ -98,7 +95,7 @@ async function archivePolarProducts(
   ctx: Context,
   input: {
     internalProductIds: string[];
-    organizationId: string;
+    organizationId: string | undefined;
   }
 ): Promise<void> {
   const { internalProductIds, organizationId } = input;
@@ -151,7 +148,7 @@ async function archivePolarPrices(
   ctx: Context,
   input: {
     internalProductIds: string[];
-    organizationId: string;
+    organizationId: string | undefined;
   }
 ): Promise<void> {
   const { internalProductIds, organizationId } = input;
@@ -187,7 +184,7 @@ async function archivePolarSubscriptionPlans(
   ctx: Context,
   input: {
     internalProductIds: string[];
-    organizationId: string;
+    organizationId: string | undefined;
   }
 ): Promise<void> {
   const { internalProductIds, organizationId } = input;

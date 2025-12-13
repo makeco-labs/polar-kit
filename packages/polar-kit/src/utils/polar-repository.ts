@@ -10,14 +10,15 @@ import type { Context } from '@/definitions';
 // ------------------ FIND POLAR PRODUCT ------------------
 export async function findPolarProduct(
   ctx: Context,
-  input: { internalProductId: string; organizationId: string }
+  input: { internalProductId: string; organizationId: string | undefined }
 ): Promise<Product | null> {
   const { internalProductId, organizationId } = input;
   const { metadata } = ctx.config;
 
   // Polar doesn't have a search API, so we list and filter
+  // Only include organizationId if provided (not needed for organization tokens)
   const response = await ctx.polarClient.products.list({
-    organizationId,
+    ...(organizationId && { organizationId }),
   });
 
   // Access items from the response
@@ -76,7 +77,7 @@ export async function findPolarPrice(
 // ------------------ LIST POLAR PRODUCTS ------------------
 export async function listPolarProducts(
   ctx: Context,
-  options: { showAll?: boolean; organizationId: string }
+  options: { showAll?: boolean; organizationId: string | undefined }
 ): Promise<Product[]> {
   const { showAll = false, organizationId } = options;
   ctx.logger.info(
@@ -85,8 +86,9 @@ export async function listPolarProducts(
 
   const allPolarProducts: Product[] = [];
 
+  // Only include organizationId if provided (not needed for organization tokens)
   const response = await ctx.polarClient.products.list({
-    organizationId,
+    ...(organizationId && { organizationId }),
   });
 
   // Access items from the response
@@ -109,7 +111,7 @@ export async function listPolarProducts(
 // ------------------ LIST POLAR PRICES ------------------
 export async function listPolarPrices(
   ctx: Context,
-  options: { showAll?: boolean; organizationId: string }
+  options: { showAll?: boolean; organizationId: string | undefined }
 ): Promise<ProductPrice[]> {
   const { showAll = false, organizationId } = options;
   ctx.logger.info(
@@ -119,8 +121,9 @@ export async function listPolarPrices(
   const allPolarPrices: ProductPrice[] = [];
 
   // Get all products first, then extract prices
+  // Only include organizationId if provided (not needed for organization tokens)
   const response = await ctx.polarClient.products.list({
-    organizationId,
+    ...(organizationId && { organizationId }),
   });
 
   // Access items from the response

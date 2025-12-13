@@ -30,7 +30,7 @@ interface SyncOptions {
 interface SyncPreflightResult {
   ctx: Context;
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ------------------ PREFLIGHT ------------------
@@ -75,10 +75,8 @@ async function runSyncPreflight(
     throw new Error('POLAR_ACCESS_TOKEN is not configured in environment');
   }
 
+  // organizationId is optional - not needed for organization tokens
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   await requireProductionConfirmation({
     action: 'sync Polar plans to database',
@@ -96,7 +94,7 @@ async function runSyncPreflight(
 
 async function syncPolarSubscriptionPlansAction(
   ctx: Context,
-  input: { organizationId: string }
+  input: { organizationId: string | undefined }
 ): Promise<void> {
   const { organizationId } = input;
   ctx.logger.info('Syncing Polar subscription plans to database...');

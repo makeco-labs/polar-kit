@@ -30,7 +30,7 @@ interface CreatePreflightResult {
   ctx: Context;
   plans: ProductCreate[];
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ========================================================================
@@ -63,11 +63,8 @@ async function runCreatePreflight(
   // Create context
   const ctx = createContext({ adapter: adapterResult.adapter, config });
 
-  // Get organization ID
+  // Get organization ID (optional - not needed for organization tokens)
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   // Production confirmation
   await requireProductionConfirmation({
@@ -89,7 +86,7 @@ async function runCreatePreflight(
 
 async function ensurePolarSubscriptionPlans(
   ctx: Context,
-  input: { plans: ProductCreate[]; organizationId: string }
+  input: { plans: ProductCreate[]; organizationId: string | undefined }
 ): Promise<void> {
   const { plans, organizationId } = input;
   ctx.logger.info('Ensuring Polar subscription plans exist...');
@@ -126,9 +123,10 @@ async function ensurePolarSubscriptionPlans(
         };
 
         // Create product directly using the plan
+        // Only include organizationId if provided (not needed for organization tokens)
         const createdProduct = await ctx.polarClient.products.create({
           ...plan,
-          organizationId,
+          ...(organizationId && { organizationId }),
           metadata,
         });
 

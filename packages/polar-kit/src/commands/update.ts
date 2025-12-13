@@ -29,7 +29,7 @@ interface UpdateOptions {
 interface UpdatePreflightResult {
   ctx: Context;
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ========================================================================
@@ -74,11 +74,8 @@ async function runUpdatePreflight(
     throw new Error('POLAR_ACCESS_TOKEN is not configured in environment');
   }
 
-  // Get organization ID
+  // Get organization ID (optional - not needed for organization tokens)
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   // Verify plans are configured
   if (!ctx.config.plans || ctx.config.plans.length === 0) {
@@ -157,7 +154,7 @@ async function updatePolarProduct(
 // ------------------ Update Polar Subscription Plans ------------------
 async function updatePolarSubscriptionPlansAction(
   ctx: Context,
-  input: { organizationId: string }
+  input: { organizationId: string | undefined }
 ): Promise<void> {
   const { organizationId } = input;
   const plans = ctx.config.plans;

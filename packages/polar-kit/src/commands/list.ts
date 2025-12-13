@@ -27,7 +27,7 @@ interface ListProductsPreflightResult {
   ctx: Context;
   showAll: boolean;
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ------------------ PREFLIGHT ------------------
@@ -48,10 +48,8 @@ async function runListProductsPreflight(
     config,
   });
 
+  // organizationId is optional - not needed for organization tokens
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   return {
     ctx,
@@ -65,7 +63,7 @@ async function runListProductsPreflight(
 
 async function listPolarProductsAction(
   ctx: Context,
-  options: { showAll?: boolean; organizationId: string }
+  options: { showAll?: boolean; organizationId: string | undefined }
 ): Promise<void> {
   const { showAll = false, organizationId } = options;
 
@@ -153,7 +151,7 @@ interface ListPricesPreflightResult {
   ctx: Context;
   showAll: boolean;
   chosenEnv: EnvironmentKey;
-  organizationId: string;
+  organizationId: string | undefined;
 }
 
 // ------------------ PREFLIGHT ------------------
@@ -174,10 +172,8 @@ async function runListPricesPreflight(
     config,
   });
 
+  // organizationId is optional - not needed for organization tokens
   const organizationId = ctx.config.env.organizationId;
-  if (!organizationId) {
-    throw new Error('organizationId is required in config.env');
-  }
 
   return {
     ctx,
@@ -258,7 +254,7 @@ function displayPrice(
 
 async function listPolarPricesAction(
   ctx: Context,
-  options: { showAll?: boolean; organizationId: string }
+  options: { showAll?: boolean; organizationId: string | undefined }
 ): Promise<void> {
   const { showAll = false, organizationId } = options;
 
